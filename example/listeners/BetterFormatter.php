@@ -1,9 +1,8 @@
 <?php
 
-namespace DavidRockin\PodiyaExample;
-use DavidRockin\Podiya\Podiya,
-    DavidRockin\Podiya\Event,
-    DavidRockin\Podiya\Listener;
+use Noair\Noair,
+    Noair\Listener,
+    Noair\Event;
 
 /**
  * An example Podiya listener
@@ -13,20 +12,19 @@ use DavidRockin\Podiya\Podiya,
  * the group and date formatting
  *
  * @author      David Tkachuk
- * @package     Podiya
- * @subpackage  PodiyaExample
- * @version     2.0
+ * @package     Noair
+ * @subpackage  NoairExample
+ * @version     1.0
  */
 class BetterFormatter extends Listener
 {
-    public function __construct(Podiya $podiya) {
-        $this->events = [
+    public function __construct() {
+        $this->handlers = [
             ['format_group', [$this, 'betterGroup']],
             ['format_date',  [$this, 'betterDate']],
         ];
-        parent::__construct($podiya);
     }
-    
+
     public function betterGroup(Event $event) {
         $groupName = strtolower($event->getData());
         switch ($groupName) {
@@ -34,7 +32,7 @@ class BetterFormatter extends Listener
             case 'administrator':
                 $groupName = '<span style="color:#F00;">Administrator</span>';
                 break;
-                
+
             case 'mod':
             case 'moderator':
                 $groupName = '<span style="color:#00A;">Moderator</span>';
@@ -42,7 +40,7 @@ class BetterFormatter extends Listener
         }
         return $groupName;
     }
-    
+
     public function betterDate(Event $event) {
         return date('F j, Y h:i:s A T', $event->getData());
     }

@@ -1,6 +1,6 @@
 <?php
 
-namespace DavidRockin\Podiya;
+namespace Noair;
 
 /**
  * Event Class
@@ -9,9 +9,9 @@ namespace DavidRockin\Podiya;
  * handlers of said event along with their results. This class also allows
  * event handlers to easily share information with other event handlers.
  *
- * @author  David Tkachuk
- * @package Podiya
- * @version 2.0
+ * @author  Garrett Whitehorn
+ * @package Noair
+ * @version 1.0
  */
 class Event
 {
@@ -19,7 +19,7 @@ class Event
      * The name of the event
      *
      * @access  private
-     * @since   0.3
+     * @since   1.0
      */
     private $name;
     
@@ -27,7 +27,7 @@ class Event
      * Who fired this event
      *
      * @access  private
-     * @since   2.0
+     * @since   1.0
      */
     private $caller;
     
@@ -35,7 +35,7 @@ class Event
      * A boolean that indicates if the event is cancelled
      *
      * @access  private
-     * @since   2.0
+     * @since   1.0
      */
     private $cancelled = false;
     
@@ -43,17 +43,17 @@ class Event
      * An array containing the event's data
      *
      * @access  private
-     * @since   2.0
+     * @since   1.0
      */
     private $data = [];
     
     /**
-     * An instance of the main Podiya class
+     * An instance of the main Noair class
      *
      * @access  private
      * @since   1.0
      */
-    private $podiya = null;
+    private $noair = null;
     
     /**
      * An array that contains the results of previous event handlers
@@ -73,15 +73,15 @@ class Event
      * @param   string  $name   The name of the event
      * @param   mixed   $caller The calling object or class name (optional)
      * @param   mixed   $data   Data to be used by the event's handler (optional)
-     * @param   \DavidRockin\Podiya\Podiya  $podiya A reference back to a Podiya instance (optional)
-     * @since   0.3
+     * @param   \Noair\Noair  $noair A reference back to a Noair instance (optional)
+     * @since   1.0
      */
-    public function __construct($name, $data = null, $caller = null, Podiya $podiya = null)
+    public function __construct($name, $data = null, $caller = null, Noair $noair = null)
     {
         $this->name     = $name;
         $this->data     = $data;
         $this->caller   = $caller;
-        $this->podiya   = $podiya;
+        $this->noair    = $noair;
     }
     
     /** 	
@@ -89,7 +89,7 @@ class Event
      * 	
      * @access  public
      * @return  string  Event name
-     * @since   2.0
+     * @since   1.0
      */
     public function getName()
     { 	
@@ -102,7 +102,7 @@ class Event
      * @access  public
      * @param   mixed   $key    An array key (optional)
      * @return  mixed   The entire data array if no params, otherwise a specific key
-     * @since   2.0
+     * @since   1.0
      */
     public function getData($key = null)
     {
@@ -119,7 +119,7 @@ class Event
      * 	
      * @access  public
      * @return  mixed  Calling object or class name
-     * @since   2.0
+     * @since   1.0
      */ 	
     public function getCaller()
     { 	
@@ -127,15 +127,15 @@ class Event
     }
     
     /**
-     * Returns our Podiya instance
+     * Returns our Noair instance
      * 
      * @access  public
-     * @return  \DavidRockin\Podiya\Podiya  Podiya object reference
+     * @return  \Noair\Noair  Noair object reference
      * @since   1.0
      */
-    public function getPodiya()
+    public function getNoair()
     {
-        return $this->podiya;
+        return $this->noair;
     }
     
     /**
@@ -180,7 +180,7 @@ class Event
      * @access  public
      * @param   bool    $cancel Cancel the event or not
      * @return  bool    Returns the new value we've set it to
-     * @since   0.3
+     * @since   1.0
      */
     public function setCancelled($cancel = true)
     {
@@ -192,7 +192,7 @@ class Event
      * 
      * @access  public
      * @return  bool    True if event is cancelled, otherwise false
-     * @since   0.3
+     * @since   1.0
      */
     public function isCancelled()
     {

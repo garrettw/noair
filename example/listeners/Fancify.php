@@ -1,9 +1,8 @@
 <?php
 
-namespace DavidRockin\PodiyaExample;
-use DavidRockin\Podiya\Podiya,
-    DavidRockin\Podiya\Event,
-    DavidRockin\Podiya\Listener;
+use Noair\Noair,
+    Noair\Listener,
+    Noair\Event;
 
 /**
  * An example Podiya listener
@@ -13,17 +12,16 @@ use DavidRockin\Podiya\Podiya,
  * the display of posts
  *
  * @author      David Tkachuk
- * @package     Podiya
- * @subpackage  PodiyaExample
- * @version     2.0
+ * @package     Noair
+ * @subpackage  NoairExample
+ * @version     1.0
  */
 class Fancify extends Listener
 {
-    public function __construct(Podiya $podiya) {
-        $this->events = [['create_post', [$this, 'fancyPost']]];
-        parent::__construct($podiya);
+    public function __construct() {
+        $this->handlers = [['create_post', [$this, 'fancyPost']]];
     }
-    
+
     public function fancyPost(Event $event) {
         return str_replace('border:1px solid #EEE;',
             'border:1px solid #DADADA;background:#F1F1F1;font-family:Arial;font-size:15px;',

@@ -1,10 +1,24 @@
-Podiya
+Noair
 ======
 
-Podiya (Ukrainian for 'event') is a PHP library that provides a simple and easy to use functionality that allows you to create events (or hooks) that are handled by listeners. Podiya can be used in an application to allow other developers create plugins that can extend and/or improve the functionality of the application.
-[![Latest Stable Version](https://poser.pugx.org/davidrockin/podiya/v/stable.svg)](https://packagist.org/packages/davidrockin/podiya) [![Total Downloads](https://poser.pugx.org/davidrockin/podiya/downloads.svg)](https://packagist.org/packages/davidrockin/podiya) [![Latest Unstable Version](https://poser.pugx.org/davidrockin/podiya/v/unstable.svg)](https://packagist.org/packages/davidrockin/podiya) [![License](https://poser.pugx.org/davidrockin/podiya/license.svg)](https://packagist.org/packages/davidrockin/podiya)
+Noair (pronounced "no-air") is a PHP library that provides a central event hub
+that other things can hook into to handle events that are published into that hub.
+It implements the Mediator (publish-subscribe) pattern in an Observer style.
+[![Latest Stable Version](https://poser.pugx.org/garrettw/noair/v/stable.svg)](https://packagist.org/packages/garrettw/noair) [![Total Downloads](https://poser.pugx.org/garrettw/noair/downloads.svg)](https://packagist.org/packages/garrettw/noair) [![Latest Unstable Version](https://poser.pugx.org/garrettw/noair/v/unstable.svg)](https://packagist.org/packages/garrettw/noair) [![License](https://poser.pugx.org/garrettw/noair/license.svg)](https://packagist.org/packages/garrettw/noair)
 
-Events
-------
+Basic structure
+-------
+- Your code will involve creation of a Noair object; this represents a single event hub.
+- Then, you will create objects of your own "listener" classes.
+- Now, your new listener object can listenTo() a specific Noair instance.
+- You will then use that Noair object in code to create/fire/publish events that the "listener" classes may handle.
 
-Events (or hooks) are thrown by the application, in which listeners (from plugins) handle the events. For example, if the application were to display a blog post, the application would make several event calls that will be handled by listeners to display the post, comments, and author information.
+Features
+-------
+- You can register listeners that subscribe to any and all events in a single Noair instance
+
+Core Principles
+-------
+- Listeners are objects with methods that are called by fired events.
+- Those methods are called handlers, or once they are registered, subscribers.
+- It is recommended (but optional) that Listener objects be used to contain handlers.

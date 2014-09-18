@@ -1,21 +1,21 @@
 {
-	"name": "davidrockin/podiya",
+	"name": "garrettw/noair",
 	"description": "PHP event library following Mediator pattern using Observer implementation",
 	"keywords": ["event","listener","hook","mediator","publish-subscribe","observer"],
 	"type": "library",
-	"homepage": "https://github.com/DavidRockin/Podiya",
-	"license": "LGPL v2.1",
+	"homepage": "https://github.com/garrettw/noair",
+	"license": "LGPL-2.1",
 	"authors": [
+		{
+			"name": "Garrett Whitehorn",
+			"homepage": "http://garrettw.net/",
+			"role": "Lead Developer"
+		},
 		{
 			"name": "David Tkachuk",
 			"email": "david.tkachuk@hotmail.com",
 			"homepage": "http://davidrockin.com/",
 			"role": "Developer"
-		},
-		{
-			"name": "Garrett Whitehorn",
-			"homepage": "http://garrettw.net/",
-			"role": "Contributor"
 		}
 	],
 	"require": {
@@ -23,7 +23,7 @@
 	},
 	"autoload": {
 		"psr-4": {
-			"DavidRockin\\Podiya\\": "src/"
+			"Noair\\": "src/"
 		}
 	}
 }

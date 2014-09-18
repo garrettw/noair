@@ -1,9 +1,8 @@
 <?php
 
-namespace DavidRockin\PodiyaExample;
-use DavidRockin\Podiya\Podiya,
-    DavidRockin\Podiya\Event,
-    DavidRockin\Podiya\Listener;
+use Noair\Noair,
+    Noair\Listener,
+    Noair\Event;
 
 /**
  * An example Podiya listener
@@ -13,17 +12,16 @@ use DavidRockin\Podiya\Podiya,
  * a post's message
  *
  * @author      David Tkachuk
- * @package     Podiya
- * @subpackage  PodiyaExample
- * @version     2.0
+ * @package     Noair
+ * @subpackage  NoairExample
+ * @version     1.0
  */
 class FancyExamplePlugin extends Listener
 {
-    public function __construct(Podiya $podiya) {
-        $this->events = [['format_message', [$this, 'formatMessage']]];
-        parent::__construct($podiya);
+    public function __construct() {
+        $this->handlers = [['format_message', [$this, 'formatMessage']]];
     }
-    
+
     public function formatMessage(Event $event) {
         $message = strip_tags($event->getData());
         $message = preg_replace('/\[b\](.+?)\[\/b\]/is', '<span style="font-weight:bold">$1</span>', $message);
