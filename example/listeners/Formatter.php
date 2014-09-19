@@ -1,15 +1,15 @@
 <?php
 
-use Noair\Noair,
-    Noair\Listener,
+use Noair\Listener,
     Noair\Event;
 
 /**
- * A default Podiya listener
+ * A default Noair listener
  *
- * This is the default Podiya listener, which other plugins/listeners
+ * This is the default Noair listener, which other plugins/listeners
  * will override its functionality
  *
+ * @author      Garrett Whitehorn
  * @author      David Tkachuk
  * @package     Noair
  * @subpackage  NoairExample
@@ -18,13 +18,12 @@ use Noair\Noair,
 class Formatter extends Listener
 {
     public function __construct() {
-        // events we will handle
+        // This is just here for an example of explicitly-defined handlers
         $this->handlers = [
-            ['format_username', [$this, 'formatUsername']],
-            ['format_group',    [$this, 'formatGroup']],
-            ['format_date',     [$this, 'formatDate']],
-            ['format_message',  [$this, 'formatMessage']],
-            ['create_post',     [$this, 'makePost']],
+            ['formatUsername', [$this, 'formatUsername']],
+            ['formatGroup',    [$this, 'formatGroup']],
+            ['formatDate',     [$this, 'formatDate']],
+            ['formatMessage',  [$this, 'formatMessage']],
         ];
     }
 
@@ -44,16 +43,16 @@ class Formatter extends Listener
         return date('F j, Y h:i:s A', $event->getData());
     }
 
-    public function makePost(Event $event) {
+    public function onCreatePost(Event $event) {
         $result = '<div style="padding: 9px 16px;border:1px solid #EEE;margin-bottom:16px;">'
                  .'<strong>Posted by</strong> '
-                 .$this->noair->publish(new Event('format_username', $event->getData('username'), $this))
+                 .$this->noair->publish(new Event('formatUsername', $event->getData('username'), $this))
                  .' ('
-                 .$this->noair->publish(new Event('format_group', $event->getData('group'), $this))
+                 .$this->noair->publish(new Event('formatGroup', $event->getData('group'), $this))
                  .')<br /><strong>Posted Date</strong> '
-                 .$this->noair->publish(new Event('format_date', $event->getData('date'), $this))
+                 .$this->noair->publish(new Event('formatDate', $event->getData('date'), $this))
                  .'<br />'
-                 .$this->noair->publish(new Event('format_message', $event->getData('message'), $this))
+                 .$this->noair->publish(new Event('formatMessage', $event->getData('message'), $this))
                  .'</div>';
 
         return $result;

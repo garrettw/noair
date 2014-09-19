@@ -33,33 +33,33 @@ HTML;
 
 
 echo "With better formatting\n",
-    $noair->publish(new Event('create_post', [
+    $noair->publish(new Event('createPost', [
         'username' => 'David',
         'group'    => 'Administrator',
         'date'     => time(),
         'message'  => $sampleMessage,
     ])), "\n",
-    $noair->publish(new Event('create_post', [
+    $noair->publish(new Event('createPost', [
         'username' => 'John Doe',
         'group'    => 'Moderator',
         'date'     => strtotime('-3 days'),
         'message'  => $sampleMessage,
     ]));
 
-// Usually this should be handled by custom methods in the listeners,
+// Usually this should be handled by custom public methods in the listeners,
 // because this code wouldn't be aware of the exact subscription
-$noair->unsubscribe('format_group', [$betterFormatter, 'betterGroup']);
+$noair->unsubscribe('formatGroup', $betterFormatter);
 
 $fancify->unlisten();
 
 echo "\n\nWithout the better formatting on group and post\n",
-    $noair->publish(new Event('create_post', [
+    $noair->publish(new Event('createPost', [
         'username' => 'AppleJuice',
         'group'    => 'Member',
         'date'     => strtotime('-3 weeks'),
         'message'  => $sampleMessage,
     ])), "\n",
-    $noair->publish(new Event('create_post', [
+    $noair->publish(new Event('createPost', [
         'username' => 'Anonymous',
         'group'    => 'Donator',
         'date'     => strtotime('-3 years'),
@@ -69,7 +69,7 @@ echo "\n\nWithout the better formatting on group and post\n",
 $fancyExamplePlugin->unlisten();
 
 echo "\n\nAfter destroying the fancyExamplePlugin listener\n",
-    $noair->publish(new Event('create_post', [
+    $noair->publish(new Event('createPost', [
         'username' => 'AppleJuice',
         'group'    => 'Member',
         'date'     => strtotime('-3 weeks'),

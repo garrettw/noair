@@ -1,16 +1,16 @@
 <?php
 
-use Noair\Noair,
-    Noair\Listener,
+use Noair\Listener,
     Noair\Event;
 
 /**
- * An example Podiya listener
+ * An example Noair listener
  *
  * This is an example listener/plugin, which will override
  * previously called listeners. This example listener enhances
  * the group and date formatting
  *
+ * @author      Garrett Whitehorn
  * @author      David Tkachuk
  * @package     Noair
  * @subpackage  NoairExample
@@ -18,14 +18,7 @@ use Noair\Noair,
  */
 class BetterFormatter extends Listener
 {
-    public function __construct() {
-        $this->handlers = [
-            ['format_group', [$this, 'betterGroup']],
-            ['format_date',  [$this, 'betterDate']],
-        ];
-    }
-
-    public function betterGroup(Event $event) {
+    public function onFormatGroup(Event $event) {
         $groupName = strtolower($event->getData());
         switch ($groupName) {
             case 'admin':
@@ -41,7 +34,7 @@ class BetterFormatter extends Listener
         return $groupName;
     }
 
-    public function betterDate(Event $event) {
+    public function onFormatDate(Event $event) {
         return date('F j, Y h:i:s A T', $event->getData());
     }
 }

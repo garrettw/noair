@@ -1,16 +1,16 @@
 <?php
 
-use Noair\Noair,
-    Noair\Listener,
+use Noair\Listener,
     Noair\Event;
 
 /**
- * An example Podiya listener
+ * An example Noair listener
  *
  * This is an example listener/plugin, which will override
  * previously called listeners. This example listener enhances
  * a post's message
  *
+ * @author      Garrett Whitehorn
  * @author      David Tkachuk
  * @package     Noair
  * @subpackage  NoairExample
@@ -18,11 +18,7 @@ use Noair\Noair,
  */
 class FancyExamplePlugin extends Listener
 {
-    public function __construct() {
-        $this->handlers = [['format_message', [$this, 'formatMessage']]];
-    }
-
-    public function formatMessage(Event $event) {
+    public function onFormatMessage(Event $event) {
         $message = strip_tags($event->getData());
         $message = preg_replace('/\[b\](.+?)\[\/b\]/is', '<span style="font-weight:bold">$1</span>', $message);
         $message = preg_replace('/\[u\](.+?)\[\/u\]/is', '<span style="text-decoration:underline">$1</span>', $message);

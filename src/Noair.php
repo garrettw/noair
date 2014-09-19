@@ -6,6 +6,7 @@ namespace Noair;
  * Noair main class
  *
  * @author  Garrett Whitehorn
+ * @author  David Tkachuk
  * @package Noair
  * @version 1.0
  */
@@ -142,8 +143,8 @@ class Noair
      * @since   1.0
      */
     public function subscribe($eventName, callable $callback = null,
-                              $priority = self::PRIORITY_NORMAL, $force = false,
-                              &$results = null)
+                              &$results = null, $priority = self::PRIORITY_NORMAL,
+                              $force = false)
     {
         if (!isset($results)) {
             $results = [];
@@ -152,9 +153,9 @@ class Noair
         // handle an array of subscribers recursively if that's what we're given
         if (is_array($eventName) && is_array($eventName[0])) {
             foreach ($eventName as $newsub) {
-                $this->subscribe($newsub[0], $newsub[1],
+                $this->subscribe($newsub[0], $newsub[1], $results,
                     (isset($newsub[2]) ? $newsub[2] : $priority),
-                    (isset($newsub[3]) ? $newsub[3] : $force), $results);
+                    (isset($newsub[3]) ? $newsub[3] : $force));
             }
             return $this;
         }
@@ -230,7 +231,7 @@ class Noair
      * @return  \Noair\Noair    This object
      * @since   1.0
      */
-    public function unsubscribe($eventName, callable $callback = null)
+    public function unsubscribe($eventName, $callback = null)
     {
         if ($callback === null) {
             if (is_array($eventName)) {
@@ -246,9 +247,29 @@ class Noair
             } else {
                 // we're unsubscribing all of $eventName
                 unset($this->events[$eventName]);
-                // TODO: look in pending too
+
+                $pcount = count($this->pending); // will be 0 if functionality is disabled
+                // loop through the pending events
+                for ($i = 0; $i < $pcount; $i++) {
+
+                    // if this pending event's name matches our eventName
+                    if ($this->pending[$i]->getName() == $eventName) {
+                        // extract that matching pending event and cast it to the wind
+                        array_splice($this->pending, $i, 1);
+                    }
+                }
             }
             return $this;
+        }
+
+        if (!is_callable($callback)) {
+            if (is_object($callback) && $callback instanceof Listener) {
+                // assume we're unsubscribing a parsed method name
+                $callback = [$callback, 'on' . str_replace(':', '', ucfirst($eventName))];
+            } else {
+                // callback is invalid, so halt
+                throw new \InvalidArgumentException('Cannot unsubscribe a non-callable');
+            }
         }
 
         // if this is a timer subscriber
@@ -299,6 +320,7 @@ class Noair
      */
     public function publish(Event $event, $priority = null)
     {
+        $event->setNoair($this);
         $eventName = $event->getName();
 
         // If no subscribers are listening to this event...
