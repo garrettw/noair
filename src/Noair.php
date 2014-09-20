@@ -339,11 +339,14 @@ class Noair
         $eventNames = [$eventName];
 
         // Make sure event is fired to any subscribers that listen to all events
-        if (isset($this->events['*'])) {
-            array_unshift($eventNames, '*');
+        if (isset($this->events['all'])) {
+            array_unshift($eventNames, 'all');
+        }
+        if (isset($this->events['any'])) {
+            array_unshift($eventNames, 'any');
         }
 
-        // First handle '*' subscribers if any, then the ones for this event name
+        // First handle above subscribers if any, then the ones for this event name
         foreach ($eventNames as $eventName) {
 
             // Loop through all the subscriber priority levels
