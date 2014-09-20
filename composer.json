@@ -4,7 +4,7 @@
 	"keywords": ["event","listener","hook","mediator","publish-subscribe","observer"],
 	"type": "library",
 	"homepage": "https://github.com/DavidRockin/Podiya",
-	"license": "LGPL v2.1",
+	"license": "LGPL-2.1",
 	"authors": [
 		{
 			"name": "David Tkachuk",

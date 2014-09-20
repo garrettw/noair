@@ -8,7 +8,6 @@ include SRCDIR . '/Podiya.php';
 include SRCDIR . '/Event.php';
 include SRCDIR . '/Listener.php';
 use DavidRockin\Podiya\Podiya,
-    DavidRockin\Podiya\Listener,
     DavidRockin\Podiya\Event;
 
 // Setup Podiya
