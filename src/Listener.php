@@ -1,63 +1,106 @@
 <?php
 
-namespace DavidRockin\Podiya;
+namespace Noair;
 
 /**
- * Podiya listener class -- to be extended
+ * Noair listener class -- to be extended
  *
+ * @author  Garrett Whitehorn
  * @author  David Tkachuk
- * @package Podiya
- * @version 2.0
+ * @package Noair
+ * @version 1.0
  */
 abstract class Listener
 {
     /**
-     * Our instance of Podiya
-     * 
-     * @access  protected
-     * @since   2.0
-     */
-    protected $podiya;
-    
-    /**
-     * The array of events we'll be subscribing to. This is to be set by child
-     * classes before they call parent::__construct($podiya);
-     * 
-     * @access  protected
-     * @since   2.0
-     */
-    protected $events = [];
-    
-    /**
-     * Sets up the Listener object
-     * 
-     * Before this is called, $this->events needs to be set by the child class.
-     * Child class constructors will likely use this same method signature.
-     * 
-     * @access  protected
-     * @since   2.0
-     */
-    protected function __construct(Podiya $podiya)
-    {
-        $this->podiya = $podiya;
-        $this->podiya->subscribe($this->events);
-    }
-    
-    /**
-     * Unregisters the listener's event handlers
+     * The array of event handlers we'll be subscribing.
      *
-     * When the listener object needs to be destroyed, this method has to be
-     * called to unsubscribe its event handles. Unfortunately, __destruct()
-     * can't accomplish this, because the Podiya object maintains hidden
-     * references to the listener object
-     * (in $this->podiya->events[$eventName][$priority][(int)]['callback'][0] ).
+     * This can be set by child class constructors so that Noair can call
+     * getEvents() and register the results. If this array is empty when the
+     * listener is to be registered, Noair will analyze any on* method names and
+     * register them automagically. However, doing it that way means you forfeit
+     * the ability to give handlers priority and forceability.
+     *
+     * Terminology note: they're not subscribers until they're subscribed ;)
+     *
+     * @access  protected
+     * @since   1.0
+     */
+    protected $handlers = [];
+
+    /**
+     * Our instance of Noair that our handlers are registered with
+     *
+     * @access  protected
+     * @since   1.0
+     */
+    protected $noair;
+
+    /**
+     * First, get our handler list, and then find all on* methods in $this and
+     * add them to the list.
+     *
+     * Caveat: using the latter paradigm, you lose the ability to give handlers
+     * priority and forceability.
      *
      * @access  public
-     * @return  void
-     * @since   2.0
+     * @return  array   our handler list
+     * @since   1.0
      */
-    public function destroy()
+    public function getHandlers()
     {
-        $this->podiya->unsubscribe($this->events);
+        $handlers = (array) $this->handlers;
+
+        $methods = (new \ReflectionClass($this))->getMethods(\ReflectionMethod::IS_PUBLIC);
+        foreach ($methods as $method) {
+            if (strpos($method->name, 'on') === 0) {
+
+                $eventName = lcfirst(substr($method->name, 2));
+                if (strpos($eventName, 'timer') === 0) {
+                    $eventName = substr_replace($eventName, ':', 5, 0);
+                }
+
+                $handlers[] = [$eventName, [$this, $method->name]];
+            }
+        }
+        return $handlers;
+    }
+
+    /**
+     * Registers our handlers with a particular Noair instance
+     *
+     * @access  public
+     * @param   Noair   $noair  The Noair instance we'll be using
+     * @return  Listener    This listener object
+     * @since   1.0
+     */
+    public function listenTo(Noair $noair, &$results = null)
+    {
+        $handlers = $this->getHandlers();
+        if (empty($handlers)) {
+            throw new \RuntimeException(
+                '$this->handlers[] is empty or $this has no on* methods!');
+        }
+
+        $this->noair = $noair;
+        $this->noair->subscribe($handlers, null, $results);
+        return $this;
+    }
+
+    /**
+     * Unregisters our handlers
+     *
+     * @access  public
+     * @param   Noair   $noair  The Noair instance we'll be using
+     * @return  Listener    This listener object
+     * @since   1.0
+     */
+    public function unlisten()
+    {
+        if (isset($this->noair) && !empty($handlers = $this->getHandlers())) {
+            $this->noair->unsubscribe($handlers);
+            unset($this->noair);
+        }
+        return $this;
     }
 }

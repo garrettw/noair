@@ -1,30 +1,24 @@
 <?php
 
-namespace DavidRockin\PodiyaExample;
-use DavidRockin\Podiya\Podiya,
-    DavidRockin\Podiya\Event,
-    DavidRockin\Podiya\Listener;
+use Noair\Listener,
+    Noair\Event;
 
 /**
- * An example Podiya listener
+ * An example Noair listener
  *
  * This is an example listener/plugin, which will override
  * previously called listeners. This example listener enhances
  * a post's message
  *
+ * @author      Garrett Whitehorn
  * @author      David Tkachuk
- * @package     Podiya
- * @subpackage  PodiyaExample
- * @version     2.0
+ * @package     Noair
+ * @subpackage  NoairExample
+ * @version     1.0
  */
 class FancyExamplePlugin extends Listener
 {
-    public function __construct(Podiya $podiya) {
-        $this->events = [['format_message', [$this, 'formatMessage']]];
-        parent::__construct($podiya);
-    }
-    
-    public function formatMessage(Event $event) {
+    public function onFormatMessage(Event $event) {
         $message = strip_tags($event->getData());
         $message = preg_replace('/\[b\](.+?)\[\/b\]/is', '<span style="font-weight:bold">$1</span>', $message);
         $message = preg_replace('/\[u\](.+?)\[\/u\]/is', '<span style="text-decoration:underline">$1</span>', $message);
