@@ -74,7 +74,7 @@ abstract class Listener
      * @return  Listener    This listener object
      * @since   1.0
      */
-    public function listenTo(Noair $noair, &$results = null)
+    public function subscribe(Noair $noair = null, &$results = null)
     {
         $handlers = $this->getHandlers();
         if (empty($handlers)) {
@@ -82,7 +82,9 @@ abstract class Listener
                 '$this->handlers[] is empty or $this has no on* methods!');
         }
 
-        $this->noair = $noair;
+        if (isset($noair)) {
+            $this->noair = $noair;
+        }
         $this->noair->subscribe($handlers, null, $results);
         return $this;
     }
@@ -95,7 +97,7 @@ abstract class Listener
      * @return  Listener    This listener object
      * @since   1.0
      */
-    public function unlisten()
+    public function unsubscribe()
     {
         if (isset($this->noair) && !empty($handlers = $this->getHandlers())) {
             $this->noair->unsubscribe($handlers);

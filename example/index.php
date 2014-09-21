@@ -20,11 +20,11 @@ include BASEDIR . '/listeners/BetterFormatter.php';
 include BASEDIR . '/listeners/Fancify.php';
 
 // Initialize the default application listeners
-$formatter = (new Formatter())->listenTo($noair);
+$formatter = (new Formatter())->subscribe($noair);
 // Initialize plugin listeners--assigned to vars so we can mess with them later
-$fancyExamplePlugin = (new FancyExamplePlugin())->listenTo($noair);
-$betterFormatter    = (new BetterFormatter())->listenTo($noair);
-$fancify            = (new Fancify())->listenTo($noair);
+$fancyExamplePlugin = (new FancyExamplePlugin())->subscribe($noair);
+$betterFormatter    = (new BetterFormatter())->subscribe($noair);
+$fancify            = (new Fancify())->subscribe($noair);
 
 $sampleMessage = <<<HTML
 Lorem [b]ipsum dolor sit amet[/b], consectetur adipiscing elit. Fusce dignissim neque vitae velit mollis, ac volutpat mauris consequat. Morbi sed arcu leo. Vestibulum dignissim, est at blandit suscipit, sapien leo [u]iaculis massa, mollis faucibus[/u] odio mauris sed risus. Integer mollis, ipsum ut efficitur lobortis, ex enim dictum felis, in mattis purus orci [b]in nulla. Nunc [u]semper mauris[/u] enim[/b], quis faucibus massa luctus quis. Sed ut malesuada magna, cursus ullamcorper augue. Curabitur orci nisl, mattis quis elementum eu, condimentum at lorem. Interdum et malesuada fames ac ante ipsum primis in faucibus. Aliquam ultricies tristique urna in maximus. Praesent facilisis, [url=http://github.com/DavidRockin]diam ac euismod sollicitudin[/url], eros diam consectetur est, quis egestas nisl orci vel nisl. Aenean consectetur justo non felis varius, eu fermentum mi fermentum. Ut ac dui ligula.
@@ -50,7 +50,7 @@ echo "With better formatting\n",
 // because this code wouldn't be aware of the exact subscription
 $noair->unsubscribe('formatGroup', $betterFormatter);
 
-$fancify->unlisten();
+$fancify->unsubscribe();
 
 echo "\n\nWithout the better formatting on group and post\n",
     $noair->publish(new Event('createPost', [
@@ -66,7 +66,7 @@ echo "\n\nWithout the better formatting on group and post\n",
         'message'  => $sampleMessage,
     ]));
 
-$fancyExamplePlugin->unlisten();
+$fancyExamplePlugin->unsubscribe();
 
 echo "\n\nAfter destroying the fancyExamplePlugin listener\n",
     $noair->publish(new Event('createPost', [
