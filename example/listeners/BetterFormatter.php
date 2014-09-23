@@ -20,7 +20,8 @@ class BetterFormatter extends Listener
 {
     public function onFormatGroup(Event $event) {
         $groupName = strtolower($event->getData());
-        switch ($groupName) {
+
+        switch ($groupName):
             case 'admin':
             case 'administrator':
                 $groupName = '<span style="color:#F00;">Administrator</span>';
@@ -30,7 +31,8 @@ class BetterFormatter extends Listener
             case 'moderator':
                 $groupName = '<span style="color:#00A;">Moderator</span>';
                 break;
-        }
+        endswitch;
+
         return $groupName;
     }
 

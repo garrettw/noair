@@ -60,19 +60,21 @@ abstract class Listener
         $handlers = (array) $this->handlers;
 
         $methods = (new \ReflectionClass($this))->getMethods(\ReflectionMethod::IS_PUBLIC);
-        foreach ($methods as $method) {
-            if (strpos($method->name, 'on') === 0) {
+        foreach ($methods as $method):
+            if (strpos($method->name, 'on') === 0):
 
                 $eventName = lcfirst(substr($method->name, 2));
-                if (strpos($eventName, 'timer') === 0) {
+
+                if (strpos($eventName, 'timer') === 0):
                     $eventName = substr_replace($eventName, ':', 5, 0);
-                } elseif (in_array($eventName, array_column($handlers, 0))) {
+
+                elseif (in_array($eventName, array_column($handlers, 0))):
                     continue;
-                }
+                endif;
 
                 $handlers[] = [$eventName, [$this, $method->name]];
-            }
-        }
+            endif;
+        endforeach;
         return $handlers;
     }
 
@@ -87,14 +89,15 @@ abstract class Listener
     public function subscribe(Noair $noair = null, &$results = null)
     {
         $handlers = $this->getHandlers();
-        if (empty($handlers)) {
+        if (empty($handlers)):
             throw new \RuntimeException(
                 '$this->handlers[] is empty or $this has no on* methods!');
-        }
+        endif;
 
-        if (isset($noair)) {
+        if (isset($noair)):
             $this->noair = $noair;
-        }
+        endif;
+
         $this->noair->subscribe($handlers, null, $results, $this->defaultPriority);
         return $this;
     }
@@ -109,9 +112,10 @@ abstract class Listener
      */
     public function unsubscribe()
     {
-        if (isset($this->noair) && !empty($handlers = $this->getHandlers())) {
+        if (isset($this->noair) && !empty($handlers = $this->getHandlers())):
             $this->noair->unsubscribe($handlers);
-        }
+        endif;
+
         return $this;
     }
 }

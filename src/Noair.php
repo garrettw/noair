@@ -80,7 +80,9 @@ class Noair
      */
     public function getSubscribers($eventName)
     {
-        return ($this->hasSubscribers($eventName)) ? $this->events[$eventName] : false;
+        return ($this->hasSubscribers($eventName))
+            ? $this->events[$eventName]
+            : false;
     }
 
     /**
@@ -94,11 +96,9 @@ class Noair
      */
     public function isSubscribed($eventName, callable $callback)
     {
-        if ($this->hasSubscribers($eventName)) {
-            // try to find the index of $callback in the list for this event name
-            return self::arraySearchDeep($callback, $this->events[$eventName]);
-        }
-        return false;
+        return ($this->hasSubscribers($eventName))
+            ? self::arraySearchDeep($callback, $this->events[$eventName])
+            : false;
     }
 
     /**
@@ -124,10 +124,11 @@ class Noair
     public function holdUnheardEvents($hold = true)
     {
         // if we're turning it off
-        if (!$hold) {
+        if (!$hold):
             // make sure the pending list is wiped clean
             $this->pending = [];
-        }
+        endif;
+
         return ($this->holdUnheardEvents = (bool) $hold);
     }
 
@@ -146,35 +147,35 @@ class Noair
                               &$results = null, $priority = self::PRIORITY_NORMAL,
                               $force = false)
     {
-        if (!isset($results)) {
+        if (!isset($results)):
             $results = [];
-        }
+        endif;
 
         // handle an array of subscribers recursively if that's what we're given
-        if (is_array($eventName) && is_array($eventName[0])) {
-            foreach ($eventName as $newsub) {
+        if (is_array($eventName) && is_array($eventName[0])):
+            foreach ($eventName as $newsub):
                 $this->subscribe($newsub[0], $newsub[1], $results,
                     (isset($newsub[2]) ? $newsub[2] : $priority),
                     (isset($newsub[3]) ? $newsub[3] : $force));
-            }
+            endforeach;
             return $this;
-        }
+        endif;
 
         // otherwise, we're not processing an array, so $callback better not be null
-        if ($callback === null) {
+        if ($callback === null):
             throw new \BadMethodCallException('$this->subscribe() parameter 1 (callback) missing');
-        }
+        endif;
 
         $interval = false;
         // if this is a timer subscriber
-        if (strpos($eventName, 'timer:') === 0) {
+        if (strpos($eventName, 'timer:') === 0):
             // extract the desired firing interval from the name
             $interval = (int) substr($eventName, 6);
             $eventName = 'timer';
-        }
+        endif;
 
         // If the event was never registered, create it
-        if (!$this->hasSubscribers($eventName)) {
+        if (!$this->hasSubscribers($eventName)):
             $this->events[$eventName] = [
                 'subscribers'          => 0,
                 self::PRIORITY_URGENT  => [],
@@ -184,7 +185,7 @@ class Noair
                 self::PRIORITY_LOW     => [],
                 self::PRIORITY_LOWEST  => [],
             ];
-        }
+        endif;
 
         // Our new subscriber will have these properties, at least
         $newsub = [
@@ -192,32 +193,32 @@ class Noair
             'force'    => (bool) $force,
         ];
         // and if it's a timer, it will have a few more
-        if ($interval) {
+        if ($interval):
             $newsub['interval'] = $interval; // milliseconds
             $newsub['nextcalltime'] = self::currentTimeMillis() + $interval;
-        }
+        endif;
         // ok, now we've composed our subscriber, so throw it on the queue
         $this->events[$eventName][$priority][] = $newsub;
         // and increment the counter for this event name
         $this->events[$eventName]['subscribers']++;
 
         // there will never be pending timer events, so skip straight to the return
-        if (!$interval) {
+        if (!$interval):
             $pcount = count($this->pending); // will be 0 if functionality is disabled
 
             // loop through the pending events
-            for ($i = 0; $i < $pcount; $i++) {
+            for ($i = 0; $i < $pcount; $i++):
 
                 // if this pending event's name matches our new subscriber
-                if ($this->pending[$i]->getName() == $eventName) {
+                if ($this->pending[$i]->getName() == $eventName):
                     // re-publish that matching pending event
                     $result = $this->publish(array_splice($this->pending, $i, 1), $priority);
-                    if (isset($results)) {
+                    if (isset($results)):
                         $results[] = $result;
-                    }
-                }
-            }
-        }
+                    endif;
+                endif;
+            endfor;
+        endif;
 
         return $this;
     }
@@ -233,75 +234,75 @@ class Noair
      */
     public function unsubscribe($eventName, $callback = null)
     {
-        if ($callback === null) {
-            if (is_array($eventName)) {
-                foreach ($eventName as $subscriber) {
-                    if (is_array($subscriber)) {
+        if ($callback === null):
+            if (is_array($eventName)):
+                foreach ($eventName as $subscriber):
+                    if (is_array($subscriber)):
                         // handle an array of subscribers recursively if that's what we're given
                         $this->unsubscribe($subscriber[0], $subscriber[1]);
-                    } else {
+                    else:
                         // we're unsubscribing all from $eventName's events
                         $this->unsubscribe($subscriber);
-                    }
-                }
-            } else {
+                    endif;
+                endforeach;
+            else:
                 // we're unsubscribing all of $eventName
                 unset($this->events[$eventName]);
 
                 $pcount = count($this->pending); // will be 0 if functionality is disabled
                 // loop through the pending events
-                for ($i = 0; $i < $pcount; $i++) {
+                for ($i = 0; $i < $pcount; $i++):
 
                     // if this pending event's name matches our eventName
-                    if ($this->pending[$i]->getName() == $eventName) {
+                    if ($this->pending[$i]->getName() == $eventName):
                         // extract that matching pending event and cast it to the wind
                         array_splice($this->pending, $i, 1);
-                    }
-                }
-            }
+                    endif;
+                endfor;
+            endif;
             return $this;
-        }
+        endif;
 
-        if (!is_callable($callback)) {
-            if (is_object($callback) && $callback instanceof Listener) {
+        if (!is_callable($callback)):
+            if (is_object($callback) && $callback instanceof Listener):
                 // assume we're unsubscribing a parsed method name
                 $callback = [$callback, 'on' . str_replace(':', '', ucfirst($eventName))];
-            } else {
+            else:
                 // callback is invalid, so halt
                 throw new \InvalidArgumentException('Cannot unsubscribe a non-callable');
-            }
-        }
+            endif;
+        endif;
 
         // if this is a timer subscriber
-        if (strpos($eventName, 'timer:') === 0) {
+        if (strpos($eventName, 'timer:') === 0):
             // then we'll need to match not only the callback but also the interval
             $callback = [
                 'interval' => (int) substr($eventName, 6),
                 'callback' => $callback
             ];
             $eventName = 'timer';
-        }
+        endif;
 
         // If the event has been subscribed to by this callback
-        if (($priority = $this->isSubscribed($eventName, $callback)) !== false) {
+        if (($priority = $this->isSubscribed($eventName, $callback)) !== false):
 
             // Loop through the subscribers for the matching priority level
-            foreach ($this->events[$eventName][$priority] as $key => $subscriber) {
+            foreach ($this->events[$eventName][$priority] as $key => $subscriber):
 
                 // if this subscriber matches what we're looking for
-                if (self::arraySearchDeep($callback, $subscriber) !== false) {
+                if (self::arraySearchDeep($callback, $subscriber) !== false):
 
                     // delete that subscriber and decrement the event name's counter
                     unset($this->events[$eventName][$priority][$key]);
                     $this->events[$eventName]['subscribers']--;
-                }
-            }
+                endif;
+            endforeach;
 
             // If there are no more events, remove the event
-            if ($this->events[$eventName]['subscribers'] == 0) {
+            if ($this->events[$eventName]['subscribers'] == 0):
                 unset($this->events[$eventName]);
-            }
-        }
+            endif;
+        endif;
 
         return $this;
     }
@@ -324,72 +325,72 @@ class Noair
         $eventName = $event->getName();
 
         // If no subscribers are listening to this event...
-        if (!$this->hasSubscribers($eventName)) {
+        if (!$this->hasSubscribers($eventName)):
 
             // Then if holding events is enabled and it's not a timer, hold it
-            if ($this->holdUnheardEvents && $eventName != 'timer') {
+            if ($this->holdUnheardEvents && $eventName != 'timer'):
                 array_unshift($this->pending, $event);
-            }
+            endif;
 
             // Either way, we don't need to do anything else here
             return;
-        }
+        endif;
 
         $result = null;
         $eventNames = [$eventName];
 
         // Make sure event is fired to any subscribers that listen to all events
-        if (isset($this->events['all'])) {
+        if (isset($this->events['all'])):
             array_unshift($eventNames, 'all');
-        }
-        if (isset($this->events['any'])) {
+        endif;
+        if (isset($this->events['any'])):
             array_unshift($eventNames, 'any');
-        }
+        endif;
 
         // First handle above subscribers if any, then the ones for this event name
-        foreach ($eventNames as $eventName) {
+        foreach ($eventNames as $eventName):
 
             // Loop through all the subscriber priority levels
-            foreach ($this->events[$eventName] as $plevel => &$subscribers) {
+            foreach ($this->events[$eventName] as $plevel => &$subscribers):
 
                 // If a priority was passed and this isn't it,
                 // or if this isn't a subscriber array
                 if (($priority !== null && $plevel != $priority)
                     || !is_array($subscribers)
-                ) {
+                ):
                     // then move on to the next priority level
                     continue;
-                }
+                endif;
 
                 // Loop through the subscribers of this priority level
-                foreach ($subscribers as &$subscriber) {
+                foreach ($subscribers as &$subscriber):
 
                     // As long as the event's not cancelled, or if the subscriber is forced..
-                    if (!$event->isCancelled() || $subscriber['force']) {
+                    if (!$event->isCancelled() || $subscriber['force']):
 
                         // If the subscriber is a timer...
-                        if (isset($subscriber['interval'])) {
+                        if (isset($subscriber['interval'])):
                             // Then if the current time is equal to or after when the sub needs to be called
-                            if (self::currentTimeMillis() >= $subscriber['nextcalltime']) {
+                            if (self::currentTimeMillis() >= $subscriber['nextcalltime']):
                                 // Mark down the next call time as another interval away
                                 $subscriber['nextcalltime'] += $subscriber['interval'];
-                            } else {
+                            else:
                                 // It's not time yet
                                 continue;
-                            }
-                        }
+                            endif;
+                        endif;
 
-                        if (!is_callable($subscriber['callback'])) {
+                        if (!is_callable($subscriber['callback'])):
                             throw new \BadFunctionCallException("Callback for $eventName is not valid");
-                        }
+                        endif;
 
                         // Fire it and save the result for passing to any further subscribers
                         $event->addPreviousResult($result);
                         $result = call_user_func($subscriber['callback'], $event);
-                    }
-                }
-            }
-        }
+                    endif;
+                endforeach;
+            endforeach;
+        endforeach;
 
         return $result;
     }
@@ -409,21 +410,19 @@ class Noair
             && !is_callable($needle)
             // and if all key/value pairs in $needle have exact matches in $haystack
             && count(array_diff_assoc($needle, $haystack)) == 0
-        ) {
+        ):
             // we found what we're looking for, so bubble back up with 'true'
             return true;
-        }
+        endif;
 
-        foreach ($haystack as $key => $value) {
+        foreach ($haystack as $key => $value):
             if ($needle === $value
-                || (is_array($value)
-                    && self::arraySearchDeep($needle, $value) !== false
-                )
-            ) {
+                || (is_array($value) && self::arraySearchDeep($needle, $value) !== false)
+            ):
                 // return top-level key of $haystack that contains $needle as a value somewhere
                 return $key;
-            }
-        }
+            endif;
+        endforeach;
         // 404 $needle not found
         return false;
     }
