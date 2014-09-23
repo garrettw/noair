@@ -379,6 +379,10 @@ class Noair
                             }
                         }
 
+                        if (!is_callable($subscriber['callback'])) {
+                            throw new \BadFunctionCallException("Callback for $eventName is not valid");
+                        }
+
                         // Fire it and save the result for passing to any further subscribers
                         $event->addPreviousResult($result);
                         $result = call_user_func($subscriber['callback'], $event);

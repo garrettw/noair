@@ -37,6 +37,14 @@ abstract class Listener
     protected $noair;
 
     /**
+     * The default priority to use when subscribing handlers with no explicit priority
+     *
+     * @access  protected
+     * @since   1.0
+     */
+    protected $defaultpriority = Noair::PRIORITY_NORMAL;
+
+    /**
      * First, get our handler list, and then find all on* methods in $this and
      * add them to the list.
      *
@@ -58,6 +66,8 @@ abstract class Listener
                 $eventName = lcfirst(substr($method->name, 2));
                 if (strpos($eventName, 'timer') === 0) {
                     $eventName = substr_replace($eventName, ':', 5, 0);
+                } elseif (in_array($eventName, array_column($handlers, 0))) {
+                    continue;
                 }
 
                 $handlers[] = [$eventName, [$this, $method->name]];
@@ -85,7 +95,7 @@ abstract class Listener
         if (isset($noair)) {
             $this->noair = $noair;
         }
-        $this->noair->subscribe($handlers, null, $results);
+        $this->noair->subscribe($handlers, null, $results, $this->defaultPriority);
         return $this;
     }
 
@@ -101,7 +111,6 @@ abstract class Listener
     {
         if (isset($this->noair) && !empty($handlers = $this->getHandlers())) {
             $this->noair->unsubscribe($handlers);
-            unset($this->noair);
         }
         return $this;
     }
