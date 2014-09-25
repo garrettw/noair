@@ -19,7 +19,7 @@ use Noair\Listener,
 class BetterFormatter extends Listener
 {
     public function onFormatGroup(Event $event) {
-        $groupName = strtolower($event->getData());
+        $groupName = strtolower($event->data);
 
         switch ($groupName):
             case 'admin':
@@ -37,6 +37,6 @@ class BetterFormatter extends Listener
     }
 
     public function onFormatDate(Event $event) {
-        return date('F j, Y h:i:s A T', $event->getData());
+        return date('F j, Y h:i:s A T', $event->data);
     }
 }

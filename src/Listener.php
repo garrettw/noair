@@ -13,8 +13,6 @@ namespace Noair;
 abstract class Listener
 {
     /**
-     * The array of event handlers we'll be subscribing.
-     *
      * This can be set by child class constructors so that Noair can call
      * getEvents() and register the results. If this array is empty when the
      * listener is to be registered, Noair will analyze any on* method names and
@@ -23,26 +21,33 @@ abstract class Listener
      *
      * Terminology note: they're not subscribers until they're subscribed ;)
      *
-     * @access  protected
+     * @api
+     * @var     array   The event handlers we'll be subscribing
      * @since   1.0
      */
     protected $handlers = [];
 
     /**
-     * Our instance of Noair that our handlers are registered with
-     *
-     * @access  protected
+     * @api
+     * @var     Noair   Our instance of Noair that our handlers are registered with
      * @since   1.0
      */
     protected $noair;
 
     /**
-     * The default priority to use when subscribing handlers with no explicit priority
-     *
-     * @access  protected
+     * @api
+     * @var     int The default priority to use when subscribing handlers with
+     *              no explicit priority
      * @since   1.0
      */
     protected $defaultpriority = Noair::PRIORITY_NORMAL;
+
+    /**
+     * @api
+     * @var     bool    Reflects whether we have subscribed to a Noair instance
+     * @since   1.0
+     */
+    protected $subscribed = false;
 
     /**
      * First, get our handler list, and then find all on* methods in $this and
@@ -51,9 +56,10 @@ abstract class Listener
      * Caveat: using the latter paradigm, you lose the ability to give handlers
      * priority and forceability.
      *
-     * @access  public
+     * @api
      * @return  array   our handler list
      * @since   1.0
+     * @version 1.0
      */
     public function getHandlers()
     {
@@ -81,10 +87,13 @@ abstract class Listener
     /**
      * Registers our handlers with a particular Noair instance
      *
-     * @access  public
-     * @param   Noair   $noair  The Noair instance we'll be using
-     * @return  Listener    This listener object
+     * @api
+     * @param   Noair|null  $noair  The Noair instance we'll be using
+     * @param   array|null  &$results   Used to return results of pending events
+     * @throws  \RuntimeException   if there are no handlers to subscribe
+     * @return  self    This listener object
      * @since   1.0
+     * @version 1.0
      */
     public function subscribe(Noair $noair = null, &$results = null)
     {
@@ -98,22 +107,27 @@ abstract class Listener
             $this->noair = $noair;
         endif;
 
-        $this->noair->subscribe($handlers, null, $results, $this->defaultPriority);
+        if (isset($this->noair)):
+            $this->noair->subscribe($handlers, null, $results, $this->defaultPriority);
+            $this->subscribed = true;
+        endif;
+
         return $this;
     }
 
     /**
      * Unregisters our handlers
      *
-     * @access  public
-     * @param   Noair   $noair  The Noair instance we'll be using
-     * @return  Listener    This listener object
+     * @api
+     * @return  self    This listener object
      * @since   1.0
+     * @version 1.0
      */
     public function unsubscribe()
     {
         if (isset($this->noair) && !empty($handlers = $this->getHandlers())):
             $this->noair->unsubscribe($handlers);
+            $this->subscribed = false;
         endif;
 
         return $this;

@@ -28,33 +28,32 @@ class Formatter extends Listener
     }
 
     public function formatUsername(Event $event) {
-        return $event->getData();
+        return $event->data;
     }
 
     public function formatGroup(Event $event) {
-        return $event->getData();
+        return $event->data;
     }
 
     public function formatMessage(Event $event) {
-        return nl2br($event->getData());
+        return nl2br($event->data);
     }
 
     public function formatDate(Event $event) {
-        return date('F j, Y h:i:s A', $event->getData());
+        return date('F j, Y h:i:s A', $event->data);
     }
 
     public function onCreatePost(Event $event) {
         $result = '<div style="padding: 9px 16px;border:1px solid #EEE;margin-bottom:16px;">'
                  .'<strong>Posted by</strong> '
-                 .$this->noair->publish(new Event('formatUsername', $event->getData('username'), $this))
+                 .$this->noair->publish(new Event('formatUsername', $event->data['username'], $this))
                  .' ('
-                 .$this->noair->publish(new Event('formatGroup', $event->getData('group'), $this))
+                 .$this->noair->publish(new Event('formatGroup', $event->data['group'], $this))
                  .')<br /><strong>Posted Date</strong> '
-                 .$this->noair->publish(new Event('formatDate', $event->getData('date'), $this))
+                 .$this->noair->publish(new Event('formatDate', $event->data['date'], $this))
                  .'<br />'
-                 .$this->noair->publish(new Event('formatMessage', $event->getData('message'), $this))
+                 .$this->noair->publish(new Event('formatMessage', $event->data['message'], $this))
                  .'</div>';
-
         return $result;
     }
 }

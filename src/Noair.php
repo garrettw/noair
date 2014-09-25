@@ -20,128 +20,103 @@ class Noair
     const PRIORITY_LOWEST	= 5;
 
     /**
-     * An array that contains registered events and their handlers by priority
-     *
-     * @access  private
+     * @api
+     * @var     array   Contains registered events and their handlers by priority
      * @since   1.0
      */
-    private $events = [];
+    protected $subscribers = [];
 
     /**
-     * An array holding any published events to which no handler has yet subscribed
-     *
-     * @access  private
+     * @api
+     * @var     array   Holds any published events to which no handler has yet subscribed
      * @since   1.0
      */
-    private $pending = [];
+    protected $pending = [];
 
     /**
-     * Whether we should put published events for which there are no subscribers
-     * onto the $pending list.
-     *
-     * @access  private
+     * @api
+     * @var     bool    Whether we should put published events for which there are
+     *                  no subscribers onto the $pending list.
      * @since   1.0
      */
-    private $holdUnheardEvents = false;
+    protected $holdUnheardEvents = false;
 
     /**
      * Constructor which can enable pending events functionality
      *
-     * @access  public
+     * @api
      * @param   bool    $hold   Whether to enable pending events
-     * @return  Noair   A new Noair object
+     * @return  self   A new Noair object
      * @since   1.0
+     * @version 1.0
      */
     public function __construct($hold = false)
     {
         $this->holdUnheardEvents = (bool) $hold;
     }
 
-    /**
-     * Determine if the event name has any subscribers
-     *
-     * @access  public
-     * @param   string  $eventName  The desired event's name
-     * @return  bool    Whether or not the event was published
-     * @since   1.0
-     */
-    public function hasSubscribers($eventName)
+    public function __get($name)
     {
-        return isset($this->events[$eventName]);
+        return $this->$name;
+    }
+
+    public function __set($name, $val)
+    {
+        if ($name == 'holdUnheardEvents'):
+            // if we're turning it off
+            if (!$val):
+                // make sure the pending list is wiped clean
+                $this->pending = [];
+            endif;
+            $this->holdUnheardEvents = (bool) $val;
+        endif;
     }
 
     /**
-     * Get the array of subscribers by priority for a given event name
+     * Determine if the event name has any subscribers
      *
-     * @access  public
+     * @api
      * @param   string  $eventName  The desired event's name
-     * @return  mixed   Array of subscribers by priority if found, false otherwise
+     * @return  bool    Whether or not the event was published
      * @since   1.0
+     * @version 1.0
      */
-    public function getSubscribers($eventName)
+    public function hasSubscribers($eventName)
     {
-        return ($this->hasSubscribers($eventName))
-            ? $this->events[$eventName]
-            : false;
+        return (isset($this->subscribers[$eventName])
+                && $this->subscribers[$eventName]['subscribers'] > 0);
     }
 
     /**
      * Determine if the described event has been subscribed to or not by the callback
      *
-     * @access  public
+     * @api
      * @param   string      $eventName  The desired event's name
      * @param   callable    $callback   The specific callback we're looking for
-     * @return  mixed   Priority it's subscribed to if found, false otherwise; use ===
+     * @return  int|false   Priority it's subscribed to if found, false otherwise; use ===
      * @since   1.0
+     * @version 1.0
      */
     public function isSubscribed($eventName, callable $callback)
     {
         return ($this->hasSubscribers($eventName))
-            ? self::arraySearchDeep($callback, $this->events[$eventName])
+            ? self::arraySearchDeep($callback, $this->subscribers[$eventName])
             : false;
-    }
-
-    /**
-     * Determine if events may be held if there are no subscribers for them
-     *
-     * @access  public
-     * @return  bool    Return true if events may be held, otherwise false
-     * @since   1.0
-     */
-    public function willHoldUnheardEvents()
-    {
-        return $this->holdUnheardEvents;
-    }
-
-    /**
-     * Specifies if the event should be held if there are no subscribers for it
-     *
-     * @access  public
-     * @param   bool    $hold   Hold the event in the pending list or not
-     * @return  bool    Returns the new value we've set it to
-     * @since   1.0
-     */
-    public function holdUnheardEvents($hold = true)
-    {
-        // if we're turning it off
-        if (!$hold):
-            // make sure the pending list is wiped clean
-            $this->pending = [];
-        endif;
-
-        return ($this->holdUnheardEvents = (bool) $hold);
     }
 
     /**
      * Registers an event handler to an event
      *
-     * @access  public
-     * @param   string      $eventName  The published event's name
-     * @param   callable    $callback   A callback that will handle the event
-     * @param   int         $priority   Priority of the handler  (0-5)
+     * @api
+     * @param   string|array    $eventName  Event name to subscribe to, or
+     *                                      an array of subscriber data
+     * @param   callable|null   $callback   A callback that will handle the event
+     * @param   array|null  &$results   Used to return results of pending events
+     * @param   int         $priority   Priority of the handler (0-5)
      * @param   bool        $force      Whether to ignore event cancellation
-     * @return  mixed       False if $eventName isn't published, array of first two params otherwise
+     * @return  self    This object
      * @since   1.0
+     * @version 1.0
      */
     public function subscribe($eventName, callable $callback = null,
                               &$results = null, $priority = self::PRIORITY_NORMAL,
@@ -176,7 +151,7 @@ class Noair
 
         // If the event was never registered, create it
         if (!$this->hasSubscribers($eventName)):
-            $this->events[$eventName] = [
+            $this->subscribers[$eventName] = [
                 'subscribers'          => 0,
                 self::PRIORITY_URGENT  => [],
                 self::PRIORITY_HIGHEST => [],
@@ -198,9 +173,9 @@ class Noair
             $newsub['nextcalltime'] = self::currentTimeMillis() + $interval;
         endif;
         // ok, now we've composed our subscriber, so throw it on the queue
-        $this->events[$eventName][$priority][] = $newsub;
+        $this->subscribers[$eventName][$priority][] = $newsub;
         // and increment the counter for this event name
-        $this->events[$eventName]['subscribers']++;
+        $this->subscribers[$eventName]['subscribers']++;
 
         // there will never be pending timer events, so skip straight to the return
         if (!$interval):
@@ -226,11 +201,12 @@ class Noair
     /**
      * Detach a given handler (or all) from an event name
      *
-     * @access  public
-     * @param   mixed       $eventName  The event(s) we want to unsubscribe from
-     * @param   callable    $callback   The callback we want to remove from the event
-     * @return  \Noair\Noair    This object
+     * @api
+     * @param   string|array    $eventName  The event(s) we want to unsubscribe from
+     * @param   callable|object|null    $callback   The callback we want to remove from the event
+     * @return  self    This object
      * @since   1.0
+     * @version 1.0
      */
     public function unsubscribe($eventName, $callback = null)
     {
@@ -247,7 +223,7 @@ class Noair
                 endforeach;
             else:
                 // we're unsubscribing all of $eventName
-                unset($this->events[$eventName]);
+                unset($this->subscribers[$eventName]);
 
                 $pcount = count($this->pending); // will be 0 if functionality is disabled
                 // loop through the pending events
@@ -287,20 +263,20 @@ class Noair
         if (($priority = $this->isSubscribed($eventName, $callback)) !== false):
 
             // Loop through the subscribers for the matching priority level
-            foreach ($this->events[$eventName][$priority] as $key => $subscriber):
+            foreach ($this->subscribers[$eventName][$priority] as $key => $subscriber):
 
                 // if this subscriber matches what we're looking for
                 if (self::arraySearchDeep($callback, $subscriber) !== false):
 
                     // delete that subscriber and decrement the event name's counter
-                    unset($this->events[$eventName][$priority][$key]);
-                    $this->events[$eventName]['subscribers']--;
+                    unset($this->subscribers[$eventName][$priority][$key]);
+                    $this->subscribers[$eventName]['subscribers']--;
                 endif;
             endforeach;
 
             // If there are no more events, remove the event
-            if ($this->events[$eventName]['subscribers'] == 0):
-                unset($this->events[$eventName]);
+            if ($this->subscribers[$eventName]['subscribers'] == 0):
+                unset($this->subscribers[$eventName]);
             endif;
         endif;
 
@@ -313,16 +289,17 @@ class Noair
      * Note: The event object can be used to share information to other similar
      * event handlers.
      *
-     * @access  public
-     * @param   \Noair\Event    $event  An event object
-     * @param   mixed   $priority   Notify only subscribers of a certain priority level
+     * @api
+     * @param   Event       $event  An event object, usually freshly created
+     * @param   int|null    $priority   Notify only subscribers of a certain priority level
      * @return  mixed   Result of the event
      * @since   1.0
+     * @version 1.0
      */
     public function publish(Event $event, $priority = null)
     {
-        $event->setNoair($this);
-        $eventName = $event->getName();
+        $event->noair = $this;
+        $eventName = $event->name;
 
         // If no subscribers are listening to this event...
         if (!$this->hasSubscribers($eventName)):
@@ -340,10 +317,10 @@ class Noair
         $eventNames = [$eventName];
 
         // Make sure event is fired to any subscribers that listen to all events
-        if (isset($this->events['all'])):
+        if (isset($this->subscribers['all'])):
             array_unshift($eventNames, 'all');
         endif;
-        if (isset($this->events['any'])):
+        if (isset($this->subscribers['any'])):
             array_unshift($eventNames, 'any');
         endif;
 
@@ -351,7 +328,7 @@ class Noair
         foreach ($eventNames as $eventName):
 
             // Loop through all the subscriber priority levels
-            foreach ($this->events[$eventName] as $plevel => &$subscribers):
+            foreach ($this->subscribers[$eventName] as $plevel => &$subscribers):
 
                 // If a priority was passed and this isn't it,
                 // or if this isn't a subscriber array
@@ -366,7 +343,7 @@ class Noair
                 foreach ($subscribers as &$subscriber):
 
                     // As long as the event's not cancelled, or if the subscriber is forced..
-                    if (!$event->isCancelled() || $subscriber['force']):
+                    if (!$event->cancelled || $subscriber['force']):
 
                         // If the subscriber is a timer...
                         if (isset($subscriber['interval'])):
@@ -385,7 +362,7 @@ class Noair
                         endif;
 
                         // Fire it and save the result for passing to any further subscribers
-                        $event->addPreviousResult($result);
+                        $event->previousResult = $result;
                         $result = call_user_func($subscriber['callback'], $event);
                     endif;
                 endforeach;
@@ -398,13 +375,14 @@ class Noair
     /**
      * Searches a multi-dimensional array for a value in any dimension.
      *
-     * @access  protected
+     * @internal
      * @param   mixed   $needle     The value to be searched for
      * @param   array   $haystack   The array
      * @return  mixed   The top-level key containing the needle if found, false otherwise
      * @since   1.0
+     * @version 1.0
      */
-    protected static function arraySearchDeep($needle, array $haystack)
+    final protected static function arraySearchDeep($needle, array $haystack)
     {
         if (is_array($needle)
             && !is_callable($needle)
@@ -431,11 +409,12 @@ class Noair
      * Returns the current timestamp in milliseconds.
      * Named for the similar function in Java.
      *
-     * @access  protected
+     * @internal
      * @return  int Current timestamp in milliseconds
      * @since   1.0
+     * @version 1.0
      */
-    protected static function currentTimeMillis()
+    final protected static function currentTimeMillis()
     {
         // microtime(true) returns a float where there's 4 digits after the
         // decimal and if you add 00 on the end, those 6 digits are microseconds.
