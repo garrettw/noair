@@ -9,6 +9,10 @@ namespace Noair;
  * handlers of said event along with their results. This class also allows
  * event handlers to easily share information with other event handlers.
  *
+ * Extend this class if you want to impose some sort of structure on the data
+ * contained in your specific event type. You could validate the $data array or
+ * add custom properties.
+ *
  * @author  Garrett Whitehorn
  * @author  David Tkachuk
  * @package Noair
@@ -93,8 +97,10 @@ class Event
             $this->previousResults[] = $val;
         elseif ($name == 'cancelled'):
             $this->cancelled = (bool) $val;
-        elseif ($name == 'noair'):
+        elseif ($name == 'noair' && $val instanceof Noair || $val === null):
             $this->noair = $val;
+        else:
+            $this->$name = $val;
         endif;
     }
 }

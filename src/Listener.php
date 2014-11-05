@@ -13,6 +13,13 @@ namespace Noair;
 abstract class Listener
 {
     /**
+     * @api
+     * @var     Noair   Our instance of Noair that our handlers are registered with
+     * @since   1.0
+     */
+    protected $noair;
+
+    /**
      * This can be set by child class constructors so that Noair can call
      * getEvents() and register the results. If this array is empty when the
      * listener is to be registered, Noair will analyze any on* method names and
@@ -29,13 +36,6 @@ abstract class Listener
 
     /**
      * @api
-     * @var     Noair   Our instance of Noair that our handlers are registered with
-     * @since   1.0
-     */
-    protected $noair;
-
-    /**
-     * @api
      * @var     int The default priority to use when subscribing handlers with
      *              no explicit priority
      * @since   1.0
@@ -48,6 +48,11 @@ abstract class Listener
      * @since   1.0
      */
     protected $subscribed = false;
+
+    public function __get($name)
+    {
+        return $this->name;
+    }
 
     /**
      * First, get our handler list, and then find all on* methods in $this and

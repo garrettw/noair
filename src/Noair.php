@@ -332,9 +332,7 @@ class Noair
 
                 // If a priority was passed and this isn't it,
                 // or if this isn't a subscriber array
-                if (($priority !== null && $plevel != $priority)
-                    || !is_array($subscribers)
-                ):
+                if (($priority !== null && $plevel != $priority) || !is_array($subscribers)):
                     // then move on to the next priority level
                     continue;
                 endif;
