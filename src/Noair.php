@@ -340,29 +340,30 @@ class Noair
                 // Loop through the subscribers of this priority level
                 foreach ($subscribers as &$subscriber):
 
-                    // As long as the event's not cancelled, or if the subscriber is forced..
-                    if (!$event->cancelled || $subscriber['force']):
-
-                        // If the subscriber is a timer...
-                        if (isset($subscriber['interval'])):
-                            // Then if the current time is equal to or after when the sub needs to be called
-                            if (self::currentTimeMillis() >= $subscriber['nextcalltime']):
-                                // Mark down the next call time as another interval away
-                                $subscriber['nextcalltime'] += $subscriber['interval'];
-                            else:
-                                // It's not time yet
-                                continue;
-                            endif;
-                        endif;
-
-                        if (!is_callable($subscriber['callback'])):
-                            throw new \BadFunctionCallException("Callback for $eventName is not valid");
-                        endif;
-
-                        // Fire it and save the result for passing to any further subscribers
-                        $event->previousResult = $result;
-                        $result = call_user_func($subscriber['callback'], $event);
+                    // If the event's cancelled and the subscriber isn't forced, skip it
+                    if ($event->cancelled && !$subscriber['force']):
+                        continue;
                     endif;
+
+                    // If the subscriber is a timer...
+                    if (isset($subscriber['interval'])):
+                        // Then if the current time is before when the sub needs to be called
+                        if (self::currentTimeMillis() < $subscriber['nextcalltime']):
+                            // It's not time yet, so skip it
+                            continue;
+                        endif;
+
+                        // Mark down the next call time as another interval away
+                        $subscriber['nextcalltime'] += $subscriber['interval'];
+                    endif;
+
+                    if (!is_callable($subscriber['callback'])):
+                        throw new \BadFunctionCallException("Callback for $eventName is not valid");
+                    endif;
+
+                    // Fire it and save the result for passing to any further subscribers
+                    $event->previousResult = $result;
+                    $result = call_user_func($subscriber['callback'], $event);
                 endforeach;
             endforeach;
         endforeach;
