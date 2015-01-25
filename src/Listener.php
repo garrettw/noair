@@ -40,7 +40,7 @@ abstract class Listener
      *              no explicit priority
      * @since   1.0
      */
-    protected $defaultpriority = Noair::PRIORITY_NORMAL;
+    protected $defaultPriority = Noair::PRIORITY_NORMAL;
 
     /**
      * @api
@@ -51,7 +51,7 @@ abstract class Listener
 
     public function __get($name)
     {
-        return $this->name;
+        return $this->$name;
     }
 
     /**
