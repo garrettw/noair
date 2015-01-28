@@ -1,0 +1,5 @@
+suites:
+    noair:
+        namespace: Noair
+        psr4_prefix: Noair
+formatter.name: pretty

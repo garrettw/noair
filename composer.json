@@ -21,6 +21,11 @@
 	"require": {
 		"php": ">=5.5.0"
 	},
+	"require-dev": {
+		"behat/behat": "~3.0",
+		"phpdocumentor/phpdocumentor": "~2.8",
+		"phpspec/phpspec": "~2.1"
+	},
 	"autoload": {
 		"psr-4": {
 			"Noair\\": "src/"
