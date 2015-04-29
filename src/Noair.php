@@ -300,10 +300,23 @@ class Noair
     {
         $event->noair = $this;
         $eventName = $event->name;
+        $eventNames = [];
+
+        // Make sure event is fired to any subscribers that listen to all events
+        if (isset($this->subscribers['all'])):
+            $eventNames[] = 'all'; // all is greedy, any is not
+        endif;
+
+        if ($this->hasSubscribers($eventName)):
+            $eventNames[] = $eventName;
+        endif;
+
+        if (isset($this->subscribers['any'])):
+            $eventNames[] = 'any';
+        endif;
 
         // If no subscribers are listening to this event...
-        if (!$this->hasSubscribers($eventName)):
-
+        if (empty($eventNames)):
             // Then if holding events is enabled and it's not a timer, hold it
             if ($this->holdUnheardEvents && $eventName != 'timer'):
                 array_unshift($this->pending, $event);
@@ -314,19 +327,8 @@ class Noair
         endif;
 
         $result = null;
-        $eventNames = [$eventName];
 
-        // Make sure event is fired to any subscribers that listen to all events
-        if (isset($this->subscribers['all'])):
-            array_unshift($eventNames, 'all');
-        endif;
-        if (isset($this->subscribers['any'])):
-            array_unshift($eventNames, 'any');
-        endif;
-
-        // First handle above subscribers if any, then the ones for this event name
         foreach ($eventNames as $eventName):
-
             // Loop through all the subscriber priority levels
             foreach ($this->subscribers[$eventName] as $plevel => &$subscribers):
 
