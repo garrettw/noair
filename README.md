@@ -60,7 +60,7 @@ $ear->subscribe($noair);
 ```
 - You will then use that Noair object in code to publish events that the "listener" classes may handle.
 ```php
-$noair->publish(new \Noair\Event('thing', 'now');
+$noair->publish(new \Noair\Event('thing', 'now'));
 
 // Now if you're an object-oriented fiend like me, you'll probably be calling that
 // from within a method, like so:
