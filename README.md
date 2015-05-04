@@ -64,7 +64,7 @@ $noair->publish(new \Noair\Event('thing', 'now'));
 
 // Now if you're an object-oriented fiend like me, you'll probably be calling that
 // from within a method, like so:
-// $this->noair->publish(new \Noair\Event('thing', 'now', $this);
+// $this->noair->publish(new \Noair\Event('thing', 'now', $this));
 
 // Anyway, either of those will return: 'do it now'
 ```
