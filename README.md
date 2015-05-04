@@ -1,4 +1,5 @@
 [![Total Downloads](https://poser.pugx.org/garrettw/noair/downloads.svg)](https://packagist.org/packages/garrettw/noair) [![Latest Stable Version](https://poser.pugx.org/garrettw/noair/v/stable.svg)](https://packagist.org/packages/garrettw/noair) [![Latest Unstable Version](https://poser.pugx.org/garrettw/noair/v/unstable.svg)](https://packagist.org/packages/garrettw/noair) [![License](https://poser.pugx.org/garrettw/noair/license.svg)](https://packagist.org/packages/garrettw/noair)
+[![SensioLabsInsight](https://insight.sensiolabs.com/projects/fc0bc904-ef77-4ed4-b474-8ce3db9a4cc2/mini.png)](https://insight.sensiolabs.com/projects/fc0bc904-ef77-4ed4-b474-8ce3db9a4cc2) [![Code Climate](https://codeclimate.com/github/garrettw/noair/badges/gpa.svg)](https://codeclimate.com/github/garrettw/noair)
 
 Noair
 ======
@@ -34,7 +35,7 @@ Fine, fine. My project was forked from one called "Podiya", which is Ukrainian f
 and I thought it looked like the letters n-o-A-i-R.
 [See for yourself.](https://translate.google.com/#en/uk/event)
 
-Basic structure
+Basic usage
 -------
 - Your code will involve creation of a Noair object; this represents a single event hub.
 ```php
