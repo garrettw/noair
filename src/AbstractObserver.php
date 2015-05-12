@@ -32,6 +32,16 @@ abstract class AbstractObserver implements ObserverInterface
     protected $handlers = [];
 
     /**
+     * If calling subscribe() results in firing of pending events, this will
+     * store the results of that event.
+     *
+     * @api
+     * @var     array Results of firing pending events
+     * @since   1.0
+     */
+    protected $subResults = [];
+
+    /**
      * @api
      * @var     bool    Reflects whether we have subscribed to a Mediator instance
      * @since   1.0
@@ -62,7 +72,7 @@ abstract class AbstractObserver implements ObserverInterface
         $methods = (new \ReflectionClass($this))->getMethods(\ReflectionMethod::IS_PUBLIC);
         // filter out any that don't begin with "on"
         $methods = array_filter($methods,
-            function($m) { return (strpos($m->name, 'on') === 0); }
+            function(ReflectionMethod $m) { return (strpos($m->name, 'on') === 0); }
         );
         $autohandlers = [];
 
@@ -87,9 +97,10 @@ abstract class AbstractObserver implements ObserverInterface
         endif;
 
         $this->mediator->subscribe($this->handlers, null, $results);
+        $this->subResults = $results;
         $this->subscribed = true;
 
-        return $results;
+        return $this;
     }
 
     /**
