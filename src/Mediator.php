@@ -178,21 +178,19 @@ class Mediator implements Observable
         $this->subscribers[$eventName]['subscribers']++;
 
         // there will never be pending timer events, so skip straight to the return
+
         if (!$interval):
-            $pcount = count($this->pending); // will be 0 if functionality is disabled
-
-            // loop through the pending events
-            for ($i = 0; $i < $pcount; $i++):
-
+            // loop through any pending events
+            foreach ($this->pending as $i => $e):
                 // if this pending event's name matches our new subscriber
-                if ($this->pending[$i]->getName() == $eventName):
+                if ($e->getName() == $eventName):
                     // re-publish that matching pending event
                     $result = $this->publish(array_splice($this->pending, $i, 1), $priority);
                     if (isset($results)):
                         $results[] = $result;
                     endif;
                 endif;
-            endfor;
+            endforeach;
         endif;
 
         return $this;
@@ -226,17 +224,17 @@ class Mediator implements Observable
                 // we're unsubscribing all of $eventName
                 unset($this->subscribers[$eventName]);
 
-                $pcount = count($this->pending); // will be 0 if functionality is disabled
-                // loop through the pending events
-                for ($i = 0; $i < $pcount; $i++):
-
+                // loop through any pending events
+                // WHY would we need to do this?
+                foreach ($this->pending as $i => $e):
                     // if this pending event's name matches our eventName
-                    if ($this->pending[$i]->getName() == $eventName):
+                    if ($e->getName() == $eventName):
                         // extract that matching pending event and cast it to the wind
                         array_splice($this->pending, $i, 1);
                     endif;
-                endfor;
+                endforeach;
             endif;
+
             return $this;
         endif;
 
