@@ -41,9 +41,9 @@ Basic usage
 ```php
 $hub = new \Noair\Mediator();
 ```
-- Then, you can create objects of your own "listener" classes.
+- Then, you can create objects of your own "observer" classes.
 ```php
-class MyListener extends \Noair\AbstractObserver
+class MyObserver extends \Noair\AbstractObserver
 {
     public function onThing(\Noair\Event $e)
     {
@@ -51,15 +51,15 @@ class MyListener extends \Noair\AbstractObserver
     }
 }
 
-$ear = new MyListener($hub);
+$ear = new MyObserver($hub);
 ```
-- Now, your new listener object will need to subscribe() to a specific Noair instance.
+- Now, your new observer object will need to subscribe() to a specific Noair instance.
 ```php
 $ear->subscribe();
 // You could also combine the two previous lines like so:
-// $ear = (new MyListener($hub))->subscribe();
+// $ear = (new MyObserver($hub))->subscribe();
 ```
-- You will then use that Noair object in code to publish events that the "listener" classes may handle.
+- You will then use that Noair object in code to publish events that the "observer" classes may handle.
 ```php
 $hub->publish(new \Noair\Event('thing', 'now'));
 
