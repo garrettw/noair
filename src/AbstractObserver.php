@@ -72,7 +72,7 @@ abstract class AbstractObserver implements ObserverInterface
         $methods = (new \ReflectionClass($this))->getMethods(\ReflectionMethod::IS_PUBLIC);
         // filter out any that don't begin with "on"
         $methods = array_filter($methods,
-            function(ReflectionMethod $m) { return (strpos($m->name, 'on') === 0); }
+            function(\ReflectionMethod $m) { return (strpos($m->name, 'on') === 0); }
         );
         $autohandlers = [];
 

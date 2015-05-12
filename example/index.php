@@ -24,12 +24,9 @@ include BASEDIR . '/observers/Fancify.php';
 // Initialize the default application observers
 $formatter = (new Formatter($hub))->subscribe();
 // Initialize plugin observers--assigned to vars so we can mess with them later
-$fancyExamplePlugin = new FancyExamplePlugin($hub);
-$betterFormatter    = new BetterFormatter($hub);
-$fancify            = new Fancify($hub);
-$fancyExamplePlugin->subscribe();
-$betterFormatter->subscribe();
-$fancify->subscribe();
+$fancyExamplePlugin = (new FancyExamplePlugin($hub))->subscribe();
+$betterFormatter    = (new BetterFormatter($hub))->subscribe();
+$fancify            = (new Fancify($hub))->subscribe();
 
 $sampleMessage = <<<HTML
 Lorem [b]ipsum dolor sit amet[/b], consectetur adipiscing elit. Fusce dignissim neque vitae velit mollis, ac volutpat mauris consequat. Morbi sed arcu leo. Vestibulum dignissim, est at blandit suscipit, sapien leo [u]iaculis massa, mollis faucibus[/u] odio mauris sed risus. Integer mollis, ipsum ut efficitur lobortis, ex enim dictum felis, in mattis purus orci [b]in nulla. Nunc [u]semper mauris[/u] enim[/b], quis faucibus massa luctus quis. Sed ut malesuada magna, cursus ullamcorper augue. Curabitur orci nisl, mattis quis elementum eu, condimentum at lorem. Interdum et malesuada fames ac ante ipsum primis in faucibus. Aliquam ultricies tristique urna in maximus. Praesent facilisis, [url=http://github.com/DavidRockin]diam ac euismod sollicitudin[/url], eros diam consectetur est, quis egestas nisl orci vel nisl. Aenean consectetur justo non felis varius, eu fermentum mi fermentum. Ut ac dui ligula.
