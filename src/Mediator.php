@@ -3,14 +3,14 @@
 namespace Noair;
 
 /**
- * Noair main class
+ * Main event pipeline
  *
  * @author  Garrett Whitehorn
  * @author  David Tkachuk
  * @package Noair
  * @version 1.0
  */
-class Noair
+class Mediator implements Observable
 {
     const PRIORITY_URGENT	= 0;
     const PRIORITY_HIGHEST	= 1;
@@ -46,7 +46,7 @@ class Noair
      *
      * @api
      * @param   bool    $hold   Whether to enable pending events
-     * @return  self   A new Noair object
+     * @return  self   A new Mediator object
      * @since   1.0
      * @version 1.0
      */
@@ -63,7 +63,6 @@ class Noair
     public function __set($name, $val)
     {
         if ($name == 'holdUnheardEvents'):
-            // if we're turning it off
             if (!$val):
                 // make sure the pending list is wiped clean
                 $this->pending = [];
@@ -108,6 +107,7 @@ class Noair
      * Registers an event handler to an event
      *
      * @api
+     * @todo    too complex
      * @param   string|array    $eventName  Event name to subscribe to, or
      *                                      an array of subscriber data
      * @param   callable|null   $callback   A callback that will handle the event
@@ -127,11 +127,11 @@ class Noair
         endif;
 
         // handle an array of subscribers recursively if that's what we're given
-        if (is_array($eventName) && is_array($eventName[0])):
-            foreach ($eventName as $newsub):
-                $this->subscribe($newsub[0], $newsub[1], $results,
-                    (isset($newsub[2]) ? $newsub[2] : $priority),
-                    (isset($newsub[3]) ? $newsub[3] : $force));
+        if (is_array($eventName)):
+            foreach ($eventName as $event => $newsub):
+                $this->subscribe($event, $newsub[0], $results,
+                    (isset($newsub[1]) ? $newsub[1] : $priority),
+                    (isset($newsub[2]) ? $newsub[2] : $force));
             endforeach;
             return $this;
         endif;
@@ -202,6 +202,7 @@ class Noair
      * Detach a given handler (or all) from an event name
      *
      * @api
+     * @todo    too complex
      * @param   string|array    $eventName  The event(s) we want to unsubscribe from
      * @param   callable|object|null    $callback   The callback we want to remove from the event
      * @return  self    This object
@@ -212,13 +213,13 @@ class Noair
     {
         if ($callback === null):
             if (is_array($eventName)):
-                foreach ($eventName as $subscriber):
+                foreach ($eventName as $event => $subscriber):
                     if (is_array($subscriber)):
                         // handle an array of subscribers recursively if that's what we're given
-                        $this->unsubscribe($subscriber[0], $subscriber[1]);
+                        $this->unsubscribe($event, $subscriber[0]);
                     else:
                         // we're unsubscribing all from $eventName's events
-                        $this->unsubscribe($subscriber);
+                        $this->unsubscribe($event);
                     endif;
                 endforeach;
             else:
@@ -240,11 +241,12 @@ class Noair
         endif;
 
         if (!is_callable($callback)):
-            if (is_object($callback) && $callback instanceof Listener):
+            if (is_object($callback) && $callback instanceof AbstractObserver):
                 // assume we're unsubscribing a parsed method name
                 $callback = [$callback, 'on' . str_replace(':', '', ucfirst($eventName))];
             else:
                 // callback is invalid, so halt
+                var_dump($callback);
                 throw new \InvalidArgumentException('Cannot unsubscribe a non-callable');
             endif;
         endif;
@@ -290,6 +292,7 @@ class Noair
      * event handlers.
      *
      * @api
+     * @todo    too complex
      * @param   Event       $event  An event object, usually freshly created
      * @param   int|null    $priority   Notify only subscribers of a certain priority level
      * @return  mixed   Result of the event
@@ -299,7 +302,6 @@ class Noair
     public function publish(Event $event, $priority = null)
     {
         $event->noair = $this;
-        $eventName = $event->name;
         $eventNames = [];
 
         // Make sure event is fired to any subscribers that listen to all events
@@ -307,22 +309,17 @@ class Noair
             $eventNames[] = 'all'; // all is greedy, any is not
         endif;
 
-        if ($this->hasSubscribers($eventName)):
-            $eventNames[] = $eventName;
+        if ($this->hasSubscribers($event->name)):
+            $eventNames[] = $event->name;
         endif;
 
         if (isset($this->subscribers['any'])):
             $eventNames[] = 'any';
         endif;
 
-        // If no subscribers are listening to this event...
+        // If no subscribers are listening to this event, try holding it
         if (empty($eventNames)):
-            // Then if holding events is enabled and it's not a timer, hold it
-            if ($this->holdUnheardEvents && $eventName != 'timer'):
-                array_unshift($this->pending, $event);
-            endif;
-
-            // Either way, we don't need to do anything else here
+            $this->tryHolding($event);
             return;
         endif;
 
@@ -371,6 +368,21 @@ class Noair
         endforeach;
 
         return $result;
+    }
+
+    /**
+     * Puts an event on the pending list if enabled and not a timer
+     *
+     * @internal
+     * @param   Event   $event   The event object to be held
+     * @since   1.0
+     * @version 1.0
+     */
+    protected function tryHolding(Event $event)
+    {
+        if ($this->holdUnheardEvents && $event->name != 'timer'):
+            array_unshift($this->pending, $event);
+        endif;
     }
 
     /**

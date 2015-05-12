@@ -50,10 +50,10 @@ class Event
 
     /**
      * @api
-     * @var     Noair|null An instance of the main Noair class
+     * @var     Mediatorr|null An instance of the main Mediator class
      * @since   1.0
      */
-    private $noair = null;
+    private $mediator = null;
 
     /**
      * @api
@@ -97,8 +97,8 @@ class Event
             $this->previousResults[] = $val;
         elseif ($name == 'cancelled'):
             $this->cancelled = (bool) $val;
-        elseif ($name == 'noair' && $val instanceof Noair || $val === null):
-            $this->noair = $val;
+        elseif ($name == 'mediator' && $val instanceof Mediator || $val === null):
+            $this->mediator = $val;
         else:
             $this->$name = $val;
         endif;

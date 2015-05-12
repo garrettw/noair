@@ -3,7 +3,7 @@
 namespace Noair;
 
 /**
- * Noair listener class -- to be extended
+ * Noair observer class -- to be extended
  *
  * @author  Garrett Whitehorn
  * @author  David Tkachuk

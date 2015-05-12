@@ -1,13 +1,13 @@
 <?php
 
-use Noair\Listener,
+use Noair\AbstractObserver,
     Noair\Event;
 
 /**
- * An example Noair listener
+ * An example Noair Observer
  *
- * This is an example listener/plugin, which will modify
- * previously called listeners. This example listener enhances
+ * This is an example Observer/plugin, which will modify
+ * previously called listeners. This example Observer enhances
  * the display of posts
  *
  * @author      Garrett Whitehorn
@@ -16,7 +16,7 @@ use Noair\Listener,
  * @subpackage  NoairExample
  * @version     1.0
  */
-class Fancify extends Listener
+class Fancify extends AbstractObserver
 {
     public function onCreatePost(Event $event) {
         return str_replace('border:1px solid #EEE;',

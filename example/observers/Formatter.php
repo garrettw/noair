@@ -1,12 +1,12 @@
 <?php
 
-use Noair\Listener,
+use Noair\AbstractObserver,
     Noair\Event;
 
 /**
- * A default Noair listener
+ * A default Noair Observer
  *
- * This is the default Noair listener, which other plugins/listeners
+ * This is the default Noair Observer, which other plugins/listeners
  * will override its functionality
  *
  * @author      Garrett Whitehorn
@@ -15,16 +15,18 @@ use Noair\Listener,
  * @subpackage  NoairExample
  * @version     1.0
  */
-class Formatter extends Listener
+class Formatter extends AbstractObserver
 {
-    public function __construct() {
+    public function subscribe() {
         // This is just here for an example of explicitly-defined handlers
         $this->handlers = [
-            ['formatUsername', [$this, 'formatUsername']],
-            ['formatGroup',    [$this, 'formatGroup']],
-            ['formatDate',     [$this, 'formatDate']],
-            ['formatMessage',  [$this, 'formatMessage']],
+            'formatUsername' => [[$this, 'formatUsername']],
+            'formatGroup'    => [[$this, 'formatGroup']],
+            'formatDate'     => [[$this, 'formatDate']],
+            'formatMessage'  => [[$this, 'formatMessage']],
         ];
+
+        parent::subscribe();
     }
 
     public function formatUsername(Event $event) {
@@ -46,13 +48,13 @@ class Formatter extends Listener
     public function onCreatePost(Event $event) {
         $result = '<div style="padding: 9px 16px;border:1px solid #EEE;margin-bottom:16px;">'
                  .'<strong>Posted by</strong> '
-                 .$this->noair->publish(new Event('formatUsername', $event->data['username'], $this))
+                 .$this->mediator->publish(new Event('formatUsername', $event->data['username'], $this))
                  .' ('
-                 .$this->noair->publish(new Event('formatGroup', $event->data['group'], $this))
+                 .$this->mediator->publish(new Event('formatGroup', $event->data['group'], $this))
                  .')<br /><strong>Posted Date</strong> '
-                 .$this->noair->publish(new Event('formatDate', $event->data['date'], $this))
+                 .$this->mediator->publish(new Event('formatDate', $event->data['date'], $this))
                  .'<br />'
-                 .$this->noair->publish(new Event('formatMessage', $event->data['message'], $this))
+                 .$this->mediator->publish(new Event('formatMessage', $event->data['message'], $this))
                  .'</div>';
         return $result;
     }

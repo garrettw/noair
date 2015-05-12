@@ -1,13 +1,13 @@
 <?php
 
-use Noair\Listener,
+use Noair\AbstractObserver,
     Noair\Event;
 
 /**
- * An example Noair listener
+ * An example Noair Observer
  *
- * This is an example listener/plugin, which will override
- * previously called listeners. This example listener enhances
+ * This is an example Observer/plugin, which will override
+ * previously called listeners. This example Observer enhances
  * a post's message
  *
  * @author      Garrett Whitehorn
@@ -16,7 +16,7 @@ use Noair\Listener,
  * @subpackage  NoairExample
  * @version     1.0
  */
-class FancyExamplePlugin extends Listener
+class FancyExamplePlugin extends AbstractObserver
 {
     public function onFormatMessage(Event $event) {
         $message = strip_tags($event->data);
