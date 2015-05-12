@@ -246,7 +246,6 @@ class Mediator implements Observable
                 $callback = [$callback, 'on' . str_replace(':', '', ucfirst($eventName))];
             else:
                 // callback is invalid, so halt
-                var_dump($callback);
                 throw new \InvalidArgumentException('Cannot unsubscribe a non-callable');
             endif;
         endif;
