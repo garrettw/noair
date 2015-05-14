@@ -26,7 +26,7 @@ class Formatter extends AbstractObserver
             'formatMessage'  => [[$this, 'formatMessage']],
         ];
 
-        parent::subscribe();
+        return parent::subscribe();
     }
 
     public function formatUsername(Event $event) {

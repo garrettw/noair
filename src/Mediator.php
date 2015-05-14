@@ -46,7 +46,6 @@ class Mediator implements Observable
      *
      * @api
      * @param   bool    $hold   Whether to enable pending events
-     * @return  self   A new Mediator object
      * @since   1.0
      * @version 1.0
      */
@@ -168,7 +167,7 @@ class Mediator implements Observable
             'force'    => (bool) $force,
         ];
         // and if it's a timer, it will have a few more
-        if ($interval):
+        if ($interval !== false):
             $newsub['interval'] = $interval; // milliseconds
             $newsub['nextcalltime'] = self::currentTimeMillis() + $interval;
         endif;
@@ -179,13 +178,13 @@ class Mediator implements Observable
 
         // there will never be pending timer events, so skip straight to the return
 
-        if (!$interval):
+        if ($interval === false):
             // loop through any pending events
             foreach ($this->pending as $i => $e):
                 // if this pending event's name matches our new subscriber
                 if ($e->getName() == $eventName):
                     // re-publish that matching pending event
-                    $result = $this->publish(array_splice($this->pending, $i, 1), $priority);
+                    $result = $this->publish(array_splice($this->pending, $i, 1)[0], $priority);
                     if (isset($results)):
                         $results[] = $result;
                     endif;
@@ -298,7 +297,7 @@ class Mediator implements Observable
      */
     public function publish(Event $event, $priority = null)
     {
-        $event->noair = $this;
+        $event->mediator = $this;
         $eventNames = [];
 
         // Make sure event is fired to any subscribers that listen to all events

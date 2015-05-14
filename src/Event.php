@@ -17,6 +17,13 @@ namespace Noair;
  * @author  David Tkachuk
  * @package Noair
  * @version 1.0
+ * @property    string  $name   The name of the event
+ * @property    mixed   $data   Contains the event's data
+ * @property    mixed   $caller Who fired this event
+ * @property    bool    $cancelled  Indicates if the event is cancelled
+ * @property    Mediator|null   $mediator   An instance of the main Mediator class
+ * @property    array   $previousResults    Contains the results of previous event handlers
+ * @property    mixed   $previousResult Get = last result, set = adds a new result
  */
 class Event
 {
@@ -50,7 +57,7 @@ class Event
 
     /**
      * @api
-     * @var     Mediatorr|null An instance of the main Mediator class
+     * @var     Mediator|null An instance of the main Mediator class
      * @since   1.0
      */
     private $mediator = null;
@@ -85,7 +92,7 @@ class Event
     public function __get($name)
     {
         if ($name == 'previousResult'):
-            return $this->previousResults[count($this->previousResults)-1];
+            return end($this->previousResults);
         endif;
 
         return $this->$name;

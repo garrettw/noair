@@ -1,6 +1,6 @@
 [![Total Downloads](https://poser.pugx.org/garrettw/noair/downloads.svg)](https://packagist.org/packages/garrettw/noair) [![Latest Stable Version](https://poser.pugx.org/garrettw/noair/v/stable.svg)](https://packagist.org/packages/garrettw/noair) [![Latest Unstable Version](https://poser.pugx.org/garrettw/noair/v/unstable.svg)](https://packagist.org/packages/garrettw/noair) [![License](https://poser.pugx.org/garrettw/noair/license.svg)](https://packagist.org/packages/garrettw/noair)
 
-[![Code Climate](https://codeclimate.com/github/garrettw/noair/badges/gpa.svg)](https://codeclimate.com/github/garrettw/noair) [![SensioLabsInsight](https://insight.sensiolabs.com/projects/fc0bc904-ef77-4ed4-b474-8ce3db9a4cc2/mini.png)](https://insight.sensiolabs.com/projects/fc0bc904-ef77-4ed4-b474-8ce3db9a4cc2)
+[![Code Climate](https://codeclimate.com/github/garrettw/noair/badges/gpa.svg)](https://codeclimate.com/github/garrettw/noair) [![SensioLabsInsight](https://insight.sensiolabs.com/projects/fc0bc904-ef77-4ed4-b474-8ce3db9a4cc2/mini.png)](https://insight.sensiolabs.com/projects/fc0bc904-ef77-4ed4-b474-8ce3db9a4cc2) [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/garrettw/noair/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/garrettw/noair/?branch=master)
 
 Noair
 ======
@@ -51,13 +51,13 @@ class MyObserver extends \Noair\AbstractObserver
     }
 }
 
-$ear = new MyObserver($hub);
+$eye = new MyObserver($hub);
 ```
 - Now, your new observer object will need to subscribe() to a specific Noair instance.
 ```php
-$ear->subscribe();
+$eye->subscribe();
 // You could also combine the two previous lines like so:
-// $ear = (new MyObserver($hub))->subscribe();
+// $eye = (new MyObserver($hub))->subscribe();
 ```
 - You will then use that Noair object in code to publish events that the "observer" classes may handle.
 ```php
