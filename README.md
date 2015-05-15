@@ -35,6 +35,12 @@ Fine, fine. My project was forked from one called "Podiya", which is Ukrainian f
 and I thought it looked like the letters n-o-A-i-R.
 [See for yourself.](https://translate.google.com/#en/uk/event)
 
+Core Principles
+-------
+- Observers are objects with methods that are called by fired events.
+- Those methods are called handlers, or once they are registered, subscribers.
+- It is recommended (but optional) that observer objects be used to contain handlers.
+
 Basic usage
 -------
 - Your code will involve creation of a Noair Mediator object; this represents a single event hub.
@@ -70,8 +76,46 @@ $hub->publish(new \Noair\Event('thing', 'now'));
 // Anyway, either of those will return: 'do it now'
 ```
 
-Core Principles
+Advanced usage
 -------
-- Observers are objects with methods that are called by fired events.
-- Those methods are called handlers, or once they are registered, subscribers.
-- It is recommended (but optional) that observer objects be used to contain handlers.
+The only "advanced" thing you can do is set up handlers with custom method names,
+custom priorities, or forceability (this means that the handler will be run even if
+another handler higher up the chain tries to cancel the rest of the chain).
+You do this by defining (actually, overriding) the `subscribe()` method as follows:
+
+```php
+class OtherObserver extends \Noair\AbstractObserver
+{
+    public function subscribe() {
+        $this->handlers = [
+            'doWeirdThings' => [ // an event name that this class handles
+                [$this, 'doWeirdThingsAlways'], // the callable that the event fires
+                \Noair\Mediator::PRIORITY_HIGHEST, // how important this handler is
+                true, // this is the forceability setting
+            ],
+        ];
+
+        return parent::subscribe();
+    }
+
+    // This is just a normal handler
+    public function onThing(\Noair\Event $e)
+    {
+        return 'do it ' . $e->data;
+    }
+
+    // Wait, this function doesn't start with "on"! How can it work?
+    // See subscribe() above.
+    public function doWeirdThingsAlways(\Noair\Event $e)
+    {
+        return 'do ' . $e->data . ' ' . rand() . ' times';
+    }
+}
+
+$hub = new \Noair\Mediator();
+$obs = (new OtherObserver($hub))->subscribe();
+
+$hub->publish(new \Noair\Event('doWeirdThings', 'stuff'));
+```
+
+That might return: `do stuff 5623 times`
