@@ -205,43 +205,45 @@ class Mediator implements Observable
      */
     public function unsubscribe($eventName, $callback = null)
     {
-        if ($callback === null):
-            if (is_array($eventName)):
-                foreach ($eventName as $event => $subscriber):
-                    if (is_array($subscriber)):
-                        // handle an array of subscribers recursively if that's what we're given
-                        $this->unsubscribe($event, $subscriber[0]);
-                    else:
-                        // we're unsubscribing all from $eventName's events
-                        $this->unsubscribe($event);
-                    endif;
-                endforeach;
-            else:
-                // we're unsubscribing all of $eventName
-                unset($this->subscribers[$eventName]);
-
-                // loop through any pending events
-                // WHY would we need to do this?
-                foreach ($this->pending as $i => $e):
-                    // if this pending event's name matches our eventName
-                    if ($e->getName() == $eventName):
-                        // extract that matching pending event and cast it to the wind
-                        array_splice($this->pending, $i, 1);
-                    endif;
-                endforeach;
-            endif;
+        if (is_array($eventName)):
+            foreach ($eventName as $event => $subscriber):
+                if (is_array($subscriber)):
+                    // handle an array of subscribers recursively if that's what we're given
+                    $this->unsubscribe($event, $subscriber[0]);
+                else:
+                    // we're unsubscribing all from $eventName's events
+                    $this->unsubscribe($event);
+                endif;
+            endforeach;
 
             return $this;
         endif;
 
+        if ($callback === null):
+            // we're unsubscribing all of $eventName
+            unset($this->subscribers[$eventName]);
+
+            // loop through any pending events
+            // WHY would we need to do this?
+            foreach ($this->pending as $i => $e):
+                // if this pending event's name matches our eventName
+                if ($e->getName() == $eventName):
+                    // extract that matching pending event and cast it to the wind
+                    array_splice($this->pending, $i, 1);
+                endif;
+            endforeach;
+
+            return $this;
+        endif;
+
+        if (is_object($callback) && $callback instanceof AbstractObserver):
+            // assume we're unsubscribing a parsed method name
+            $callback = [$callback, 'on' . str_replace(':', '', ucfirst($eventName))];
+        endif;
+
         if (!is_callable($callback)):
-            if (is_object($callback) && $callback instanceof AbstractObserver):
-                // assume we're unsubscribing a parsed method name
-                $callback = [$callback, 'on' . str_replace(':', '', ucfirst($eventName))];
-            else:
-                // callback is invalid, so halt
-                throw new \InvalidArgumentException('Cannot unsubscribe a non-callable');
-            endif;
+            // callback is invalid, so halt
+            throw new \InvalidArgumentException('Cannot unsubscribe a non-callable');
         endif;
 
         // if this is a timer subscriber
