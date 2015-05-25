@@ -54,6 +54,9 @@ class Mediator implements Observable
         $this->holdUnheardEvents = (bool) $hold;
     }
 
+    /**
+     * @return  mixed
+     */
     public function __get($name)
     {
         return $this->$name;
@@ -372,7 +375,7 @@ class Mediator implements Observable
      * @internal
      * @param   mixed   $needle     The value to be searched for
      * @param   array   $haystack   The array
-     * @return  mixed   The top-level key containing the needle if found, false otherwise
+     * @return  int|bool    The top-level key containing the needle if found, false otherwise
      * @since   1.0
      * @version 1.0
      */

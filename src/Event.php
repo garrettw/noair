@@ -89,6 +89,9 @@ class Event
         $this->caller   = $caller;
     }
 
+    /**
+     * @return  mixed
+     */
     public function __get($name)
     {
         if ($name == 'previousResult'):

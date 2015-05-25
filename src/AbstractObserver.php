@@ -52,6 +52,9 @@ abstract class AbstractObserver implements ObserverInterface
         $this->mediator = $m;
     }
 
+    /**
+     * @return  mixed
+     */
     public function __get($name)
     {
         return $this->$name;
@@ -62,7 +65,7 @@ abstract class AbstractObserver implements ObserverInterface
      *
      * @api
      * @throws  \RuntimeException   if there are no handlers to subscribe
-     * @return  array|null  Results of any pending events
+     * @return  self    This observer object
      * @since   1.0
      * @version 1.0
      */
