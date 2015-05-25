@@ -115,7 +115,7 @@ class Mediator implements Observable
      * @param   array|null  &$results   Used to return results of pending events
      * @param   int         $priority   Priority of the handler (0-5)
      * @param   bool        $force      Whether to ignore event cancellation
-     * @return  self    This object
+     * @return  array    The results of any pending events
      * @since   1.0
      * @version 1.0
      */
@@ -347,6 +347,7 @@ class Mediator implements Observable
      *
      * @internal
      * @param   string  $eventName  The event name to check for
+     * @param   integer $priority   The priority to assign to published events
      * @since   1.0
      * @version 1.0
      */

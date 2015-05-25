@@ -5,7 +5,7 @@ namespace Noair;
 interface Observable
 {
     /**
-     * @return  self  This object
+     * @return  array    The results of any pending events
      */
     public function subscribe($eventName, callable $callback, $priority, $force);
 
