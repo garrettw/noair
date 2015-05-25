@@ -120,26 +120,23 @@ class Mediator implements Observable
      * @version 1.0
      */
     public function subscribe($eventName, callable $callback = null,
-                              &$results = null, $priority = self::PRIORITY_NORMAL,
-                              $force = false)
+                              $priority = self::PRIORITY_NORMAL, $force = false)
     {
-        if (!isset($results)):
-            $results = [];
-        endif;
-
         // handle an array of subscribers recursively if that's what we're given
         if (is_array($eventName)):
+            $results = [];
+
             foreach ($eventName as $event => $newsub):
-                $this->subscribe($event, $newsub[0], $results,
+                $results[] = $this->subscribe($event, $newsub[0],
                     (isset($newsub[1]) ? $newsub[1] : $priority),
                     (isset($newsub[2]) ? $newsub[2] : $force));
             endforeach;
-            return $this;
+            return $results;
         endif;
 
         // otherwise, we're not processing an array, so $callback better not be null
         if ($callback === null):
-            throw new \BadMethodCallException('$this->subscribe() parameter 1 (callback) missing');
+            throw new \BadMethodCallException('$this->subscribe() parameter 2 (callback) missing');
         endif;
 
         $interval = false;
@@ -182,16 +179,7 @@ class Mediator implements Observable
             return $this;
         endif;
 
-        // loop through any pending events
-        foreach ($this->pending as $i => $e):
-            // if this pending event's name matches our new subscriber
-            if ($e->getName() == $eventName):
-                // re-publish that matching pending event
-                $results[] = $this->publish(array_splice($this->pending, $i, 1)[0], $priority);
-            endif;
-        endforeach;
-
-        return $this;
+        return $this->firePendingEvents($eventName, $priority);
     }
 
     /**
@@ -352,6 +340,28 @@ class Mediator implements Observable
         endforeach;
 
         return $result;
+    }
+
+    /**
+     * If any events are pending for $eventName, re-publish them now
+     *
+     * @internal
+     * @param   string  $eventName  The event name to check for
+     * @since   1.0
+     * @version 1.0
+     */
+    protected function firePendingEvents($eventName, $priority)
+    {
+        $results = [];
+        // loop through any pending events
+        foreach ($this->pending as $i => $e):
+            // if this pending event's name matches our new subscriber
+            if ($e->getName() == $eventName):
+                // re-publish that matching pending event
+                $results[] = $this->publish(array_splice($this->pending, $i, 1)[0], $priority);
+            endif;
+        endforeach;
+        return $results;
     }
 
     /**

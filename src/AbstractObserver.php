@@ -99,8 +99,7 @@ abstract class AbstractObserver implements ObserverInterface
                 '$this->handlers[] is empty or $this has no on*() methods!');
         endif;
 
-        $this->mediator->subscribe($this->handlers, null, $results);
-        $this->subResults = $results;
+        $this->subResults = $this->mediator->subscribe($this->handlers);
         $this->subscribed = true;
 
         return $this;

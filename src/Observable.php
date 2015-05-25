@@ -7,9 +7,7 @@ interface Observable
     /**
      * @return  self  This object
      */
-    public function subscribe($eventName, callable $callback, &$results,
-        $priority, $force
-    );
+    public function subscribe($eventName, callable $callback, $priority, $force);
 
     /**
      * @return  mixed   Result of the event
