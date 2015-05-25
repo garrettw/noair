@@ -161,36 +161,33 @@ class Mediator implements Observable
             ];
         endif;
 
+        $isInterval = ($interval !== false);
         // Our new subscriber will have these properties, at least
+        // and if it's a timer, it will have a few more
         $newsub = [
             'callback' => $callback,
             'force'    => (bool) $force,
+            'interval' => ($isInterval) ? $interval : null, // milliseconds
+            'nextcalltime' => ($isInterval) ? self::currentTimeMillis() + $interval : null,
         ];
-        // and if it's a timer, it will have a few more
-        if ($interval !== false):
-            $newsub['interval'] = $interval; // milliseconds
-            $newsub['nextcalltime'] = self::currentTimeMillis() + $interval;
-        endif;
         // ok, now we've composed our subscriber, so throw it on the queue
         $this->subscribers[$eventName][$priority][] = $newsub;
         // and increment the counter for this event name
         $this->subscribers[$eventName]['subscribers']++;
 
-        // there will never be pending timer events, so skip straight to the return
-
-        if ($interval === false):
-            // loop through any pending events
-            foreach ($this->pending as $i => $e):
-                // if this pending event's name matches our new subscriber
-                if ($e->getName() == $eventName):
-                    // re-publish that matching pending event
-                    $result = $this->publish(array_splice($this->pending, $i, 1)[0], $priority);
-                    if (isset($results)):
-                        $results[] = $result;
-                    endif;
-                endif;
-            endforeach;
+        // there will never be pending timer events, so just return
+        if ($isInterval):
+            return $this;
         endif;
+
+        // loop through any pending events
+        foreach ($this->pending as $i => $e):
+            // if this pending event's name matches our new subscriber
+            if ($e->getName() == $eventName):
+                // re-publish that matching pending event
+                $results[] = $this->publish(array_splice($this->pending, $i, 1)[0], $priority);
+            endif;
+        endforeach;
 
         return $this;
     }
