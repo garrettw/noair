@@ -106,7 +106,6 @@ class Mediator implements Observable
      * Registers an event handler to an event
      *
      * @api
-     * @todo    too complex
      * @param   string|array    $eventName  Event name to subscribe to, or
      *                                      an array of subscriber data
      * @param   callable|null   $callback   A callback that will handle the event
@@ -196,7 +195,6 @@ class Mediator implements Observable
      * Detach a given handler (or all) from an event name
      *
      * @api
-     * @todo    too complex
      * @param   string|array    $eventName  The event(s) we want to unsubscribe from
      * @param   callable|object|null    $callback   The callback we want to remove from the event
      * @return  self    This object
@@ -222,17 +220,6 @@ class Mediator implements Observable
         if ($callback === null):
             // we're unsubscribing all of $eventName
             unset($this->subscribers[$eventName]);
-
-            // loop through any pending events
-            // WHY would we need to do this?
-            foreach ($this->pending as $i => $e):
-                // if this pending event's name matches our eventName
-                if ($e->getName() == $eventName):
-                    // extract that matching pending event and cast it to the wind
-                    array_splice($this->pending, $i, 1);
-                endif;
-            endforeach;
-
             return $this;
         endif;
 
@@ -272,7 +259,7 @@ class Mediator implements Observable
             endforeach;
 
             // If there are no more events, remove the event
-            if ($this->subscribers[$eventName]['subscribers'] == 0):
+            if (!$this->hasSubscribers($eventName)):
                 unset($this->subscribers[$eventName]);
             endif;
         endif;
@@ -287,7 +274,6 @@ class Mediator implements Observable
      * event handlers.
      *
      * @api
-     * @todo    too complex
      * @param   Event       $event  An event object, usually freshly created
      * @param   int|null    $priority   Notify only subscribers of a certain priority level
      * @return  mixed   Result of the event
