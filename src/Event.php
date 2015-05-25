@@ -100,14 +100,23 @@ class Event
 
     public function __set($name, $val)
     {
-        if ($name == 'previousResult'):
-            $this->previousResults[] = $val;
-        elseif ($name == 'cancelled'):
-            $this->cancelled = (bool) $val;
-        elseif ($name == 'mediator' && $val instanceof Mediator || $val === null):
-            $this->mediator = $val;
-        else:
-            $this->$name = $val;
-        endif;
+        switch ($name):
+            case 'previousResult':
+                $this->previousResults[] = $val;
+                break;
+
+            case 'cancelled':
+                $this->cancelled = (bool) $val;
+                break;
+
+            case 'mediator':
+                if ($val instanceof Mediator || $val === null):
+                    $this->mediator = $val;
+                endif;
+                break;
+
+            default:
+                $this->$name = $val;
+        endswitch;
     }
 }
