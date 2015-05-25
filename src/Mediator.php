@@ -176,7 +176,7 @@ class Mediator implements Observable
 
         // there will never be pending timer events, so just return
         if ($isInterval):
-            return $this;
+            return [];
         endif;
 
         return $this->firePendingEvents($eventName, $priority);
