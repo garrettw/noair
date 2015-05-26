@@ -196,15 +196,10 @@ class Mediator implements Observable
     {
         if (is_array($eventName)):
             foreach ($eventName as $event => $subscriber):
-                if (is_array($subscriber)):
-                    // handle an array of subscribers recursively if that's what we're given
-                    $this->unsubscribe($event, $subscriber[0]);
-                else:
-                    // we're unsubscribing all from $eventName's events
-                    $this->unsubscribe($event);
-                endif;
+                // handle an array of subscribers recursively if that's what we're given
+                // or else we're unsubscribing all from $eventName's events
+                $this->unsubscribe($event, (is_array($subscriber)) ? $subscriber[0] : null);
             endforeach;
-
             return $this;
         endif;
 
@@ -234,25 +229,26 @@ class Mediator implements Observable
             $eventName = 'timer';
         endif;
 
-        // If the event has been subscribed to by this callback
-        if (($priority = $this->isSubscribed($eventName, $callback)) !== false):
+        // If the event has not been subscribed to by this callback then return
+        if (($priority = $this->isSubscribed($eventName, $callback)) === false):
+            return $this;
+        endif;
 
-            // Loop through the subscribers for the matching priority level
-            foreach ($this->subscribers[$eventName][$priority] as $key => $subscriber):
+        // Loop through the subscribers for the matching priority level
+        foreach ($this->subscribers[$eventName][$priority] as $key => $subscriber):
 
-                // if this subscriber matches what we're looking for
-                if (self::arraySearchDeep($callback, $subscriber) !== false):
+            // if this subscriber matches what we're looking for
+            if (self::arraySearchDeep($callback, $subscriber) !== false):
 
-                    // delete that subscriber and decrement the event name's counter
-                    unset($this->subscribers[$eventName][$priority][$key]);
-                    $this->subscribers[$eventName]['subscribers']--;
-                endif;
-            endforeach;
-
-            // If there are no more events, remove the event
-            if (!$this->hasSubscribers($eventName)):
-                unset($this->subscribers[$eventName]);
+                // delete that subscriber and decrement the event name's counter
+                unset($this->subscribers[$eventName][$priority][$key]);
+                $this->subscribers[$eventName]['subscribers']--;
             endif;
+        endforeach;
+
+        // If there are no more events, remove the event
+        if (!$this->hasSubscribers($eventName)):
+            unset($this->subscribers[$eventName]);
         endif;
 
         return $this;
