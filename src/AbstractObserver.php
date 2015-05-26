@@ -65,12 +65,20 @@ abstract class AbstractObserver implements ObserverInterface
      *
      * @api
      * @throws  \RuntimeException   if there are no handlers to subscribe
+     * @param   array|null  $newhandler Individual handler to subscribe if needed
      * @return  self    This observer object
      * @since   1.0
      * @version 1.0
      */
-    public function subscribe()
+    public function subscribe($newhandler = null)
     {
+        if (is_array($newhandler)):
+            $this->handlers = array_merge($this->handlers, $newhandler);
+            $this->subResults = $this->mediator->subscribe($newhandler);
+            $this->subscribed = true;
+            return $this;
+        endif;
+
         // get an array of the methods in the child class
         $methods = (new \ReflectionClass($this))->getMethods(\ReflectionMethod::IS_PUBLIC);
         // filter out any that don't begin with "on"
