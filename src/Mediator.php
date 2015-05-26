@@ -273,17 +273,12 @@ class Mediator implements Observable
         $eventNames = [];
 
         // Make sure event is fired to any subscribers that listen to all events
-        if (isset($this->subscribers['all'])):
-            $eventNames[] = 'all'; // all is greedy, any is not
-        endif;
-
-        if ($this->hasSubscribers($event->name)):
-            $eventNames[] = $event->name;
-        endif;
-
-        if (isset($this->subscribers['any'])):
-            $eventNames[] = 'any';
-        endif;
+        // all is greedy, any is not - due to order
+        foreach (['all', $event->name, 'any'] as $e):
+            if ($this->hasSubscribers($e)):
+                $eventNames[] = $e;
+            endif;
+        endforeach;
 
         // If no subscribers are listening to this event, try holding it
         if (empty($eventNames)):
@@ -294,18 +289,20 @@ class Mediator implements Observable
         $result = null;
 
         foreach ($eventNames as $eventName):
-            // Loop through all the subscriber priority levels
-            foreach ($this->subscribers[$eventName] as $plevel => &$subscribers):
 
-                // If a priority was passed and this isn't it,
-                // or if this isn't a subscriber array
-                if (($priority !== null && $plevel != $priority) || !is_array($subscribers)):
-                    // then move on to the next priority level
-                    continue;
-                endif;
+            $sublevels = $this->subscribers[$eventName];
+            unset($sublevels['subscribers']);
+
+            if ($priority !== null):
+                // If a priority was passed, trim out all others
+                $sublevels = [$priority => $sublevels[$priority]];
+            endif;
+
+            // Loop through all the subscriber priority levels
+            foreach ($sublevels as $plevel => $subs):
 
                 // Loop through the subscribers of this priority level
-                foreach ($subscribers as &$subscriber):
+                foreach ($subs as $i => $subscriber):
 
                     // If the event's cancelled and the subscriber isn't forced, skip it
                     if ($event->cancelled && !$subscriber['force']):
@@ -321,11 +318,8 @@ class Mediator implements Observable
                         endif;
 
                         // Mark down the next call time as another interval away
-                        $subscriber['nextcalltime'] += $subscriber['interval'];
-                    endif;
-
-                    if (!is_callable($subscriber['callback'])):
-                        throw new \BadFunctionCallException("Callback for $eventName is not valid");
+                        $this->subscribers[$eventName][$plevel][$i]['nextcalltime']
+                            += $subscriber['interval'];
                     endif;
 
                     // Fire it and save the result for passing to any further subscribers
