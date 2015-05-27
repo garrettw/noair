@@ -20,13 +20,6 @@ class Mediator implements Observable
     const PRIORITY_LOWEST	= 5;
 
     /**
-     * @internal
-     * @var     array   Contains registered events and their handlers by priority
-     * @since   1.0
-     */
-    protected $subscribers = [];
-
-    /**
      * @api
      * @var     array   Holds any published events to which no handler has yet subscribed
      * @since   1.0
@@ -42,61 +35,14 @@ class Mediator implements Observable
     protected $holdingUnheardEvents = false;
 
     /**
-     * Get or set the value of the holdingUnheardEvents property
-     *
-     * @api
-     * @param   bool|null   $val    true or false to set the value, omit to retrieve
-     * @return  bool    the value of the property
+     * @internal
+     * @var     array   Contains registered events and their handlers by priority
      * @since   1.0
-     * @version 1.0
      */
-    public function holdUnheardEvents($val = null)
-    {
-        if ($val === null):
-            return $this->holdingUnheardEvents;
-        endif;
-
-        $val = (bool) $val;
-        if ($val === false):
-            $this->held = []; // make sure the held list is wiped clean
-        endif;
-        return ($this->holdingUnheardEvents = $val);
-    }
+    protected $subscribers = [];
 
     /**
-     * Determine if the event name has any subscribers
-     *
-     * @api
-     * @param   string  $eventName  The desired event's name
-     * @return  bool    Whether or not the event was published
-     * @since   1.0
-     * @version 1.0
-     */
-    public function hasSubscribers($eventName)
-    {
-        return (isset($this->subscribers[$eventName])
-                && $this->subscribers[$eventName]['subscribers'] > 0);
-    }
-
-    /**
-     * Determine if the described event has been subscribed to or not by the callback
-     *
-     * @api
-     * @param   string      $eventName  The desired event's name
-     * @param   callable    $callback   The specific callback we're looking for
-     * @return  int|false   Priority it's subscribed to if found, false otherwise; use ===
-     * @since   1.0
-     * @version 1.0
-     */
-    public function isSubscribed($eventName, callable $callback)
-    {
-        return ($this->hasSubscribers($eventName))
-            ? self::arraySearchDeep($callback, $this->subscribers[$eventName])
-            : false;
-    }
-
-    /**
-     * Registers event handler(s) to event(s)
+     * Registers event handler(s) to event name(s)
      *
      * @api
      * @param   array   $eventHandlers  Associative array of event names & handlers
@@ -110,7 +56,8 @@ class Mediator implements Observable
 
         foreach ($eventHandlers as $eventName => $handler):
             if (!self::isValidHandler($handler)):
-                throw new \BadMethodCallException("Mediator::subscribe() - invalid handler for $eventName");
+                throw new \BadMethodCallException('Mediator::subscribe() - '
+                    .'invalid handler for ' . $eventName);
             endif;
 
             $interval = false;
@@ -158,78 +105,6 @@ class Mediator implements Observable
         endforeach;
 
         return $results;
-    }
-
-    /**
-     * Detach a given handler (or all) from an event name
-     *
-     * @api
-     * @param   string|array    $eventName  The event(s) we want to unsubscribe from
-     * @param   callable|object|null    $callback   The callback we want to remove from the event
-     * @return  self    This object
-     * @since   1.0
-     * @version 1.0
-     */
-    public function unsubscribe($eventName, $callback = null)
-    {
-        if (is_array($eventName)):
-            foreach ($eventName as $event => $subscriber):
-                // handle an array of subscribers recursively if that's what we're given
-                // or else we're unsubscribing all from $eventName's events
-                $this->unsubscribe($event, (is_array($subscriber)) ? $subscriber[0] : null);
-            endforeach;
-            return $this;
-        endif;
-
-        if ($callback === null):
-            // we're unsubscribing all of $eventName
-            unset($this->subscribers[$eventName]);
-            return $this;
-        endif;
-
-        if (is_object($callback) && $callback instanceof Observer):
-            // assume we're unsubscribing a parsed method name
-            $callback = [$callback, 'on' . str_replace(':', '', ucfirst($eventName))];
-        endif;
-
-        if (!is_callable($callback)):
-            // callback is invalid, so halt
-            throw new \InvalidArgumentException('Cannot unsubscribe a non-callable');
-        endif;
-
-        // if this is a timer subscriber
-        if (strpos($eventName, 'timer:') === 0):
-            // then we'll need to match not only the callback but also the interval
-            $callback = [
-                'interval' => (int) substr($eventName, 6),
-                'callback' => $callback
-            ];
-            $eventName = 'timer';
-        endif;
-
-        // If the event has not been subscribed to by this callback then return
-        if (($priority = $this->isSubscribed($eventName, $callback)) === false):
-            return $this;
-        endif;
-
-        // Loop through the subscribers for the matching priority level
-        foreach ($this->subscribers[$eventName][$priority] as $key => $subscriber):
-
-            // if this subscriber matches what we're looking for
-            if (self::arraySearchDeep($callback, $subscriber) !== false):
-
-                // delete that subscriber and decrement the event name's counter
-                unset($this->subscribers[$eventName][$priority][$key]);
-                $this->subscribers[$eventName]['subscribers']--;
-            endif;
-        endforeach;
-
-        // If there are no more events, remove the event
-        if (!$this->hasSubscribers($eventName)):
-            unset($this->subscribers[$eventName]);
-        endif;
-
-        return $this;
     }
 
     /**
@@ -311,14 +186,129 @@ class Mediator implements Observable
     }
 
     /**
+     * Detach a given handler (or all) from an event name
      *
+     * @api
+     * @param   string|array    $eventName  The event(s) we want to unsubscribe from
+     * @param   callable|object|null    $callback   The callback we want to remove from the event
+     * @return  self    This object
+     * @since   1.0
+     * @version 1.0
      */
-    protected static function isValidHandler($handler)
+    public function unsubscribe($eventName, $callback = null)
     {
-        return (is_callable($handler[0])
-                && (!isset($handler[1]) || is_int($handler[1]))
-                && (!isset($handler[2]) || is_bool($handler[2]))
-        );
+        if (is_array($eventName)):
+            foreach ($eventName as $event => $subscriber):
+                // handle an array of subscribers recursively if that's what we're given
+                // or else we're unsubscribing all from $eventName's events
+                $this->unsubscribe($event, (is_array($subscriber)) ? $subscriber[0] : null);
+            endforeach;
+            return $this;
+        endif;
+
+        if ($callback === null):
+            // we're unsubscribing all of $eventName
+            unset($this->subscribers[$eventName]);
+            return $this;
+        endif;
+
+        if (is_object($callback) && $callback instanceof Observer):
+            // assume we're unsubscribing a parsed method name
+            $callback = [$callback, 'on' . str_replace(':', '', ucfirst($eventName))];
+        endif;
+
+        if (!is_callable($callback)):
+            // callback is invalid, so halt
+            throw new \InvalidArgumentException('Cannot unsubscribe a non-callable');
+        endif;
+
+        // if this is a timer subscriber
+        if (strpos($eventName, 'timer:') === 0):
+            // then we'll need to match not only the callback but also the interval
+            $callback = [
+                'interval' => (int) substr($eventName, 6),
+                'callback' => $callback
+            ];
+            $eventName = 'timer';
+        endif;
+
+        // If the event has not been subscribed to by this callback then return
+        if (($priority = $this->isSubscribed($eventName, $callback)) === false):
+            return $this;
+        endif;
+
+        // Loop through the subscribers for the matching priority level
+        foreach ($this->subscribers[$eventName][$priority] as $key => $subscriber):
+
+            // if this subscriber matches what we're looking for
+            if (self::arraySearchDeep($callback, $subscriber) !== false):
+
+                // delete that subscriber and decrement the event name's counter
+                unset($this->subscribers[$eventName][$priority][$key]);
+                $this->subscribers[$eventName]['subscribers']--;
+            endif;
+        endforeach;
+
+        // If there are no more events, remove the event
+        if (!$this->hasSubscribers($eventName)):
+            unset($this->subscribers[$eventName]);
+        endif;
+
+        return $this;
+    }
+
+    /**
+     * Determine if the event name has any subscribers
+     *
+     * @api
+     * @param   string  $eventName  The desired event's name
+     * @return  bool    Whether or not the event was published
+     * @since   1.0
+     * @version 1.0
+     */
+    public function hasSubscribers($eventName)
+    {
+        return (isset($this->subscribers[$eventName])
+                && $this->subscribers[$eventName]['subscribers'] > 0);
+    }
+
+    /**
+     * Get or set the value of the holdingUnheardEvents property
+     *
+     * @api
+     * @param   bool|null   $val    true or false to set the value, omit to retrieve
+     * @return  bool    the value of the property
+     * @since   1.0
+     * @version 1.0
+     */
+    public function holdUnheardEvents($val = null)
+    {
+        if ($val === null):
+            return $this->holdingUnheardEvents;
+        endif;
+
+        $val = (bool) $val;
+        if ($val === false):
+            $this->held = []; // make sure the held list is wiped clean
+        endif;
+        return ($this->holdingUnheardEvents = $val);
+    }
+
+    /**
+     * Determine if the described event has been subscribed to or not by the callback
+     *
+     * @api
+     * @param   string      $eventName  The desired event's name
+     * @param   callable    $callback   The specific callback we're looking for
+     * @return  int|false   Priority it's subscribed to if found, false otherwise; use ===
+     * @since   1.0
+     * @version 1.0
+     */
+    public function isSubscribed($eventName, callable $callback)
+    {
+        return ($this->hasSubscribers($eventName))
+            ? self::arraySearchDeep($callback, $this->subscribers[$eventName])
+            : false;
     }
 
     /**
@@ -357,6 +347,17 @@ class Mediator implements Observable
         if ($this->holdingUnheardEvents && $event->name != 'timer'):
             array_unshift($this->held, $event);
         endif;
+    }
+
+    /**
+     *
+     */
+    protected static function isValidHandler($handler)
+    {
+        return (is_callable($handler[0])
+                && (!isset($handler[1]) || is_int($handler[1]))
+                && (!isset($handler[2]) || is_bool($handler[2]))
+        );
     }
 
     /**
