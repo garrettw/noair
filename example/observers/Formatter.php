@@ -1,7 +1,6 @@
 <?php
 
-use Noair\AbstractObserver,
-    Noair\Event;
+use Noair\Event;
 
 /**
  * A default Noair Observer
@@ -15,7 +14,7 @@ use Noair\AbstractObserver,
  * @subpackage  NoairExample
  * @version     1.0
  */
-class Formatter extends AbstractObserver
+class Formatter extends Noair\Observer
 {
     public function subscribe() {
         // This is just here for an example of explicitly-defined handlers

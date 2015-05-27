@@ -1,7 +1,6 @@
 <?php
 
-use Noair\AbstractObserver,
-    Noair\Event;
+use Noair\Event;
 
 /**
  * An example Noair Observer
@@ -16,7 +15,7 @@ use Noair\AbstractObserver,
  * @subpackage  NoairExample
  * @version     1.0
  */
-class FancyExamplePlugin extends AbstractObserver
+class FancyExamplePlugin extends Noair\Observer
 {
     public function onFormatMessage(Event $event) {
         $message = strip_tags($event->data);

@@ -10,7 +10,7 @@ namespace Noair;
  * @package Noair
  * @version 1.0
  */
-abstract class AbstractObserver implements ObserverInterface
+abstract class Observer implements ObserverInterface
 {
     /**
      * @api

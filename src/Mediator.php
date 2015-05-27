@@ -209,7 +209,7 @@ class Mediator implements Observable
             return $this;
         endif;
 
-        if (is_object($callback) && $callback instanceof AbstractObserver):
+        if (is_object($callback) && $callback instanceof Observer):
             // assume we're unsubscribing a parsed method name
             $callback = [$callback, 'on' . str_replace(':', '', ucfirst($eventName))];
         endif;
