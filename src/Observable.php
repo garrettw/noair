@@ -7,7 +7,7 @@ interface Observable
     /**
      * @return  array    The results of any pending events
      */
-    public function subscribe($eventName, callable $callback, $priority, $force);
+    public function subscribe(array $eventHandlers);
 
     /**
      * @return  mixed   Result of the event

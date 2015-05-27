@@ -20,7 +20,7 @@ class Mediator implements Observable
     const PRIORITY_LOWEST	= 5;
 
     /**
-     * @api
+     * @internal
      * @var     array   Contains registered events and their handlers by priority
      * @since   1.0
      */
@@ -31,46 +31,36 @@ class Mediator implements Observable
      * @var     array   Holds any published events to which no handler has yet subscribed
      * @since   1.0
      */
-    protected $pending = [];
+    public $held = [];
 
     /**
-     * @api
+     * @internal
      * @var     bool    Whether we should put published events for which there are
-     *                  no subscribers onto the $pending list.
+     *                  no subscribers onto the $held list.
      * @since   1.0
      */
-    protected $holdUnheardEvents = false;
+    protected $holdingUnheardEvents = false;
 
     /**
-     * Constructor which can enable pending events functionality
+     * Get or set the value of the holdingUnheardEvents property
      *
      * @api
-     * @param   bool    $hold   Whether to enable pending events
+     * @param   bool|null   $val    true or false to set the value, omit to retrieve
+     * @return  bool    the value of the property
      * @since   1.0
      * @version 1.0
      */
-    public function __construct($hold = false)
+    public function holdUnheardEvents($val = null)
     {
-        $this->holdUnheardEvents = (bool) $hold;
-    }
-
-    /**
-     * @return  mixed
-     */
-    public function __get($name)
-    {
-        return $this->$name;
-    }
-
-    public function __set($name, $val)
-    {
-        if ($name == 'holdUnheardEvents'):
-            if (!$val):
-                // make sure the pending list is wiped clean
-                $this->pending = [];
-            endif;
-            $this->holdUnheardEvents = (bool) $val;
+        if ($val === null):
+            return $this->holdingUnheardEvents;
         endif;
+
+        $val = (bool) $val;
+        if ($val === false):
+            $this->held = []; // make sure the held list is wiped clean
+        endif;
+        return ($this->holdingUnheardEvents = $val);
     }
 
     /**
@@ -106,80 +96,68 @@ class Mediator implements Observable
     }
 
     /**
-     * Registers an event handler to an event
+     * Registers event handler(s) to event(s)
      *
      * @api
-     * @param   string|array    $eventName  Event name to subscribe to, or
-     *                                      an array of subscriber data
-     * @param   callable|null   $callback   A callback that will handle the event
-     * @param   array|null  &$results   Used to return results of pending events
-     * @param   int         $priority   Priority of the handler (0-5)
-     * @param   bool        $force      Whether to ignore event cancellation
-     * @return  array    The results of any pending events
+     * @param   array   $eventHandlers  Associative array of event names & handlers
+     * @return  array   The results of firing any held events
      * @since   1.0
      * @version 1.0
      */
-    public function subscribe($eventName, callable $callback = null,
-                              $priority = self::PRIORITY_NORMAL, $force = false)
+    public function subscribe(array $eventHandlers)
     {
-        // handle an array of subscribers recursively if that's what we're given
-        if (is_array($eventName)):
-            $results = [];
+        $results = [];
 
-            foreach ($eventName as $event => $newsub):
-                $results[] = $this->subscribe($event, $newsub[0],
-                    (isset($newsub[1]) ? $newsub[1] : $priority),
-                    (isset($newsub[2]) ? $newsub[2] : $force));
-            endforeach;
-            return $results;
-        endif;
+        foreach ($eventHandlers as $eventName => $handler):
+            if (!self::isValidHandler($handler)):
+                throw new \BadMethodCallException("Mediator::subscribe() - invalid handler for $eventName");
+            endif;
 
-        // otherwise, we're not processing an array, so $callback better not be null
-        if ($callback === null):
-            throw new \BadMethodCallException('$this->subscribe() parameter 2 (callback) missing');
-        endif;
+            $interval = false;
+            // if this is a timer subscriber
+            if (strpos($eventName, 'timer:') === 0):
+                // extract the desired firing interval from the name
+                $interval = (int) substr($eventName, 6);
+                $eventName = 'timer';
+            endif;
 
-        $interval = false;
-        // if this is a timer subscriber
-        if (strpos($eventName, 'timer:') === 0):
-            // extract the desired firing interval from the name
-            $interval = (int) substr($eventName, 6);
-            $eventName = 'timer';
-        endif;
+            // If the event was never registered, create it
+            if (!$this->hasSubscribers($eventName)):
+                $this->subscribers[$eventName] = [
+                    'subscribers'          => 0,
+                    self::PRIORITY_URGENT  => [],
+                    self::PRIORITY_HIGHEST => [],
+                    self::PRIORITY_HIGH    => [],
+                    self::PRIORITY_NORMAL  => [],
+                    self::PRIORITY_LOW     => [],
+                    self::PRIORITY_LOWEST  => [],
+                ];
+            endif;
 
-        // If the event was never registered, create it
-        if (!$this->hasSubscribers($eventName)):
-            $this->subscribers[$eventName] = [
-                'subscribers'          => 0,
-                self::PRIORITY_URGENT  => [],
-                self::PRIORITY_HIGHEST => [],
-                self::PRIORITY_HIGH    => [],
-                self::PRIORITY_NORMAL  => [],
-                self::PRIORITY_LOW     => [],
-                self::PRIORITY_LOWEST  => [],
+            $isInterval = ($interval !== false);
+            $priority = (isset($handler[1])) ? $handler[1] : self::PRIORITY_NORMAL;
+
+            // Our new subscriber will have these properties, at least
+            // and if it's a timer, it will have a few more
+            $newsub = [
+                'callback' => $handler[0],
+                'force'    => (isset($handler[2])) ? $handler[2] : false,
+                'interval' => ($isInterval) ? $interval : null, // milliseconds
+                'nextcalltime' => ($isInterval) ? self::currentTimeMillis() + $interval : null,
             ];
-        endif;
 
-        $isInterval = ($interval !== false);
-        // Our new subscriber will have these properties, at least
-        // and if it's a timer, it will have a few more
-        $newsub = [
-            'callback' => $callback,
-            'force'    => (bool) $force,
-            'interval' => ($isInterval) ? $interval : null, // milliseconds
-            'nextcalltime' => ($isInterval) ? self::currentTimeMillis() + $interval : null,
-        ];
-        // ok, now we've composed our subscriber, so throw it on the queue
-        $this->subscribers[$eventName][$priority][] = $newsub;
-        // and increment the counter for this event name
-        $this->subscribers[$eventName]['subscribers']++;
+            // ok, now we've composed our subscriber, so throw it on the queue
+            $this->subscribers[$eventName][$priority][] = $newsub;
+            // and increment the counter for this event name
+            $this->subscribers[$eventName]['subscribers']++;
 
-        // there will never be pending timer events, so just return
-        if ($isInterval):
-            return [];
-        endif;
+            // there will never be held timer events, but otherwise fire matching held events
+            if (!$isInterval):
+                $results[] = $this->fireHeldEvents($eventName, $priority);
+            endif;
+        endforeach;
 
-        return $this->firePendingEvents($eventName, $priority);
+        return $results;
     }
 
     /**
@@ -333,7 +311,18 @@ class Mediator implements Observable
     }
 
     /**
-     * If any events are pending for $eventName, re-publish them now
+     *
+     */
+    protected static function isValidHandler($handler)
+    {
+        return (is_callable($handler[0])
+                && (!isset($handler[1]) || is_int($handler[1]))
+                && (!isset($handler[2]) || is_bool($handler[2]))
+        );
+    }
+
+    /**
+     * If any events are held for $eventName, re-publish them now
      *
      * @internal
      * @param   string  $eventName  The event name to check for
@@ -341,22 +330,22 @@ class Mediator implements Observable
      * @since   1.0
      * @version 1.0
      */
-    protected function firePendingEvents($eventName, $priority)
+    protected function fireHeldEvents($eventName, $priority)
     {
         $results = [];
-        // loop through any pending events
-        foreach ($this->pending as $i => $e):
-            // if this pending event's name matches our new subscriber
+        // loop through any held events
+        foreach ($this->held as $i => $e):
+            // if this held event's name matches our new subscriber
             if ($e->getName() == $eventName):
-                // re-publish that matching pending event
-                $results[] = $this->publish(array_splice($this->pending, $i, 1)[0], $priority);
+                // re-publish that matching held event
+                $results[] = $this->publish(array_splice($this->held, $i, 1)[0], $priority);
             endif;
         endforeach;
         return $results;
     }
 
     /**
-     * Puts an event on the pending list if enabled and not a timer
+     * Puts an event on the held list if enabled and not a timer
      *
      * @internal
      * @param   Event   $event   The event object to be held
@@ -365,8 +354,8 @@ class Mediator implements Observable
      */
     protected function tryHolding(Event $event)
     {
-        if ($this->holdUnheardEvents && $event->name != 'timer'):
-            array_unshift($this->pending, $event);
+        if ($this->holdingUnheardEvents && $event->name != 'timer'):
+            array_unshift($this->held, $event);
         endif;
     }
 
