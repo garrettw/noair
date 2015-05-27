@@ -16,7 +16,7 @@ class ObserverSpec extends ObjectBehavior
 
     function it_is_initializable()
     {
-        $this->shouldBeAnInstanceOf('Noair\AbstractObserver');
+        $this->shouldBeAnInstanceOf('Noair\Observer');
         $this->shouldBeAnInstanceOf('spec\Noair\ObserverExample');
     }
 
@@ -31,7 +31,7 @@ class ObserverSpec extends ObjectBehavior
     }
 }
 
-class ObserverExample extends \Noair\AbstractObserver
+class ObserverExample extends \Noair\Observer
 {
     public function subscribe() {
         // This is just here for an example of explicitly-defined handlers

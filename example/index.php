@@ -8,7 +8,7 @@ include SRCDIR . '/Observable.php';
 include SRCDIR . '/Mediator.php';
 include SRCDIR . '/Event.php';
 include SRCDIR . '/ObserverInterface.php';
-include SRCDIR . '/AbstractObserver.php';
+include SRCDIR . '/Observer.php';
 use Noair\Mediator,
     Noair\Event;
 
