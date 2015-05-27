@@ -49,7 +49,7 @@ $hub = new \Noair\Mediator();
 ```
 - Then, you can create objects of your own "observer" classes.
 ```php
-class MyObserver extends \Noair\AbstractObserver
+class MyObserver extends \Noair\Observer
 {
     public function onThing(\Noair\Event $e)
     {
@@ -84,7 +84,7 @@ another handler higher up the chain tries to cancel the rest of the chain).
 You do this by defining (actually, overriding) the `subscribe()` method as follows:
 
 ```php
-class OtherObserver extends \Noair\AbstractObserver
+class OtherObserver extends \Noair\Observer
 {
     public function subscribe() {
         $this->handlers = [
