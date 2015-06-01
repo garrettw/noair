@@ -48,7 +48,8 @@ abstract class Observer implements ObserverInterface
      */
     protected $subscribed = false;
 
-    public function __construct(Mediator $m) {
+    public function __construct(Mediator $m)
+    {
         $this->mediator = $m;
     }
 
@@ -83,7 +84,7 @@ abstract class Observer implements ObserverInterface
         $methods = (new \ReflectionClass($this))->getMethods(\ReflectionMethod::IS_PUBLIC);
         // filter out any that don't begin with "on"
         $methods = array_filter($methods,
-            function(\ReflectionMethod $m) { return (strpos($m->name, 'on') === 0); }
+            function (\ReflectionMethod $m) { return (strpos($m->name, 'on') === 0); }
         );
         $autohandlers = [];
 
