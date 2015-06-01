@@ -43,11 +43,9 @@ Core Principles
 
 Basic usage
 -------
-- Your code will involve creation of a Noair Mediator object; this represents a single event hub.
-```php
-$hub = new \Noair\Mediator();
-```
-- Then, you can create objects of your own "observer" classes.
+The idea is that you have multiple event handlers watching a single event hub, waiting for events they can handle.
+
+- First, you'll create child classes of Noair's abstract Observer class that contain handlers:
 ```php
 class MyObserver extends \Noair\Observer
 {
@@ -56,16 +54,16 @@ class MyObserver extends \Noair\Observer
         return 'do it ' . $e->data;
     }
 }
-
-$eye = new MyObserver($hub);
 ```
-- Now, your new observer object will need to subscribe() to a specific Noair instance.
+- Now, in the main code you're executing, you'll need to create a hub for your events: a Mediator object which serves as a go-between for your handlers and your code that fires/publishes the events.
 ```php
-$eye->subscribe();
-// You could also combine the two previous lines like so:
-// $eye = (new MyObserver($hub))->subscribe();
+$hub = new \Noair\Mediator();
 ```
-- You will then use that Noair object in code to publish events that the "observer" classes may handle.
+- Then, you can create objects of your own Observer classes and subscribe them to the hub.
+```php
+$obs = (new MyObserver($hub))->subscribe();
+```
+- You will then use that Mediator object in your code to publish events that the Observer classes may handle.
 ```php
 $hub->publish(new \Noair\Event('thing', 'now'));
 
