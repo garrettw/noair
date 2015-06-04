@@ -59,12 +59,7 @@ class Mediator implements Observable
                 throw new \BadMethodCallException('Mediator::subscribe() - invalid handler for ' . $eventName);
             endif;
 
-            $interval = $this->extractInterval($eventName); // milliseconds
-            $isInterval = ($interval !== false);
-
-            if ($isInterval):
-                $eventName = 'timer';
-            endif;
+            list($eventName, $interval) = $this->extractInterval($eventName); // milliseconds
 
             $this->scaffoldIfNotExist($eventName);
             $priority = (isset($handler[1])) ? $handler[1] : self::PRIORITY_NORMAL;
@@ -74,8 +69,8 @@ class Mediator implements Observable
             $newsub = [
                 'callback' => $handler[0],
                 'force'    => (isset($handler[2])) ? $handler[2] : false,
-                'interval' => ($isInterval) ? $interval : null,
-                'nextcalltime' => ($isInterval) ? self::currentTimeMillis() + $interval : null,
+                'interval' => $interval,
+                'nextcalltime' => self::currentTimeMillis() + $interval,
             ];
 
             // ok, now throw it on the queue and increment the counter for this event name
@@ -83,7 +78,7 @@ class Mediator implements Observable
             $this->subscribers[$eventName]['subscribers']++;
 
             // there will never be held timer events, but otherwise fire matching held events
-            if (!$isInterval):
+            if ($interval === 0):
                 $results[] = $this->fireHeldEvents($eventName, $priority);
             endif;
         endforeach;
@@ -146,7 +141,7 @@ class Mediator implements Observable
                     endif;
 
                     // If the subscriber is a timer...
-                    if (isset($subscriber['interval'])):
+                    if ($subscriber['interval'] !== 0):
                         // Then if the current time is before when the sub needs to be called
                         if (self::currentTimeMillis() < $subscriber['nextcalltime']):
                             // It's not time yet, so skip it
@@ -299,9 +294,11 @@ class Mediator implements Observable
      */
     protected function extractInterval($eventName)
     {
-        return (strpos($eventName, 'timer:') === 0)
+        $interval = (strpos($eventName, 'timer:') === 0)
             ? (int) substr($eventName, 6)
-            : false;
+            : 0;
+
+        return [($interval) ? 'timer' : $eventName, $interval];
     }
 
     /**
