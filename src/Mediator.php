@@ -59,22 +59,12 @@ class Mediator implements Observable
                 throw new \BadMethodCallException('Mediator::subscribe() - invalid handler for ' . $eventName);
             endif;
 
-            list($eventName, $interval) = $this->extractInterval($eventName); // milliseconds
-
+            list($eventName, $interval) = $this->extractIntervalFrom($eventName); // milliseconds
             $this->scaffoldIfNotExist($eventName);
+
             $priority = (isset($handler[1])) ? $handler[1] : self::PRIORITY_NORMAL;
 
-            // Our new subscriber will have these properties, at least
-            // and if it's a timer, it will have a few more
-            $newsub = [
-                'callback' => $handler[0],
-                'force'    => (isset($handler[2])) ? $handler[2] : false,
-                'interval' => $interval,
-                'nextcalltime' => self::currentTimeMillis() + $interval,
-            ];
-
-            // ok, now throw it on the queue and increment the counter for this event name
-            $this->subscribers[$eventName][$priority][] = $newsub;
+            $this->subscribers[$eventName][$priority][] = self::subscriberFromHandler($handler, $interval);
             $this->subscribers[$eventName]['subscribers']++;
 
             // there will never be held timer events, but otherwise fire matching held events
@@ -292,7 +282,7 @@ class Mediator implements Observable
     /**
      *
      */
-    protected function extractInterval($eventName)
+    protected function extractIntervalFrom($eventName)
     {
         $interval = (strpos($eventName, 'timer:') === 0)
             ? (int) substr($eventName, 6)
@@ -358,17 +348,6 @@ class Mediator implements Observable
     }
 
     /**
-     *
-     */
-    protected static function isValidHandler($handler)
-    {
-        return (is_callable($handler[0])
-                && (!isset($handler[1]) || is_int($handler[1]))
-                && (!isset($handler[2]) || is_bool($handler[2]))
-        );
-    }
-
-    /**
      * Searches a multi-dimensional array for a value in any dimension.
      *
      * @internal
@@ -378,7 +357,7 @@ class Mediator implements Observable
      * @since   1.0
      * @version 1.0
      */
-    final protected static function arraySearchDeep($needle, array $haystack)
+    protected static function arraySearchDeep($needle, array $haystack)
     {
         if (is_array($needle)
             && !is_callable($needle)
@@ -399,6 +378,30 @@ class Mediator implements Observable
         endforeach;
         // 404 $needle not found
         return false;
+    }
+
+    /**
+     *
+     */
+    protected static function subscriberFromHandler($handler, $interval = 0)
+    {
+        return [
+            'callback' => $handler[0],
+            'force'    => (isset($handler[2])) ? $handler[2] : false,
+            'interval' => $interval,
+            'nextcalltime' => self::currentTimeMillis() + $interval,
+        ];
+    }
+
+    /**
+     *
+     */
+    protected static function isValidHandler($handler)
+    {
+        return (is_callable($handler[0])
+                && (!isset($handler[1]) || is_int($handler[1]))
+                && (!isset($handler[2]) || is_bool($handler[2]))
+        );
     }
 
     /**
