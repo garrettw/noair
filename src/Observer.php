@@ -10,7 +10,7 @@ namespace Noair;
  * @package Noair
  * @version 1.0
  */
-abstract class Observer implements ObserverInterface
+abstract class Observer
 {
     /**
      * @api
@@ -48,7 +48,7 @@ abstract class Observer implements ObserverInterface
      */
     protected $subscribed = false;
 
-    public function __construct(Mediator $m)
+    public function __construct(Observable $m)
     {
         $this->mediator = $m;
     }

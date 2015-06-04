@@ -56,7 +56,7 @@ class Mediator implements Observable
 
         foreach ($eventHandlers as $eventName => $handler):
             if (!self::isValidHandler($handler)):
-                throw new \BadMethodCallException('Mediator::subscribe() - invalid handler for ' . $eventName);
+                throw new \BadMethodCallException('Mediator::subscribe() - invalid handler passed for ' . $eventName);
             endif;
 
             list($eventName, $interval) = $this->extractIntervalFrom($eventName); // milliseconds
@@ -288,7 +288,7 @@ class Mediator implements Observable
             ? (int) substr($eventName, 6)
             : 0;
 
-        return [($interval) ? 'timer' : $eventName, $interval];
+        return [($interval !== 0) ? 'timer' : $eventName, $interval];
     }
 
     /**

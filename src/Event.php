@@ -113,7 +113,7 @@ class Event
                 break;
 
             case 'mediator':
-                if ($val instanceof Mediator || $val === null):
+                if ($val instanceof Observable || $val === null):
                     $this->mediator = $val;
                 endif;
                 break;
