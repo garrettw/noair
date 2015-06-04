@@ -28,8 +28,7 @@ class Mediator implements Observable
 
     /**
      * @internal
-     * @var     bool    Whether we should put published events for which there are
-     *                  no subscribers onto the $held list.
+     * @var     bool    Whether we should put published events for which there are no subscribers onto the $held list.
      * @since   1.0
      */
     protected $holdingUnheardEvents = false;
@@ -45,6 +44,7 @@ class Mediator implements Observable
      * Registers event handler(s) to event name(s)
      *
      * @api
+     * @throws  BadMethodCallException  if validation of any handler fails
      * @param   array   $eventHandlers  Associative array of event names & handlers
      * @return  array   The results of firing any held events
      * @since   1.0
@@ -56,32 +56,17 @@ class Mediator implements Observable
 
         foreach ($eventHandlers as $eventName => $handler):
             if (!self::isValidHandler($handler)):
-                throw new \BadMethodCallException('Mediator::subscribe() - '
-                    .'invalid handler for ' . $eventName);
+                throw new \BadMethodCallException('Mediator::subscribe() - invalid handler for ' . $eventName);
             endif;
 
-            $interval = false;
-            // if this is a timer subscriber
-            if (strpos($eventName, 'timer:') === 0):
-                // extract the desired firing interval from the name
-                $interval = (int) substr($eventName, 6);
+            $interval = $this->extractInterval($eventName); // milliseconds
+            $isInterval = ($interval !== false);
+
+            if ($isInterval):
                 $eventName = 'timer';
             endif;
 
-            // If the event was never registered, create it
-            if (!$this->hasSubscribers($eventName)):
-                $this->subscribers[$eventName] = [
-                    'subscribers'          => 0,
-                    self::PRIORITY_URGENT  => [],
-                    self::PRIORITY_HIGHEST => [],
-                    self::PRIORITY_HIGH    => [],
-                    self::PRIORITY_NORMAL  => [],
-                    self::PRIORITY_LOW     => [],
-                    self::PRIORITY_LOWEST  => [],
-                ];
-            endif;
-
-            $isInterval = ($interval !== false);
+            $this->scaffoldIfNotExist($eventName);
             $priority = (isset($handler[1])) ? $handler[1] : self::PRIORITY_NORMAL;
 
             // Our new subscriber will have these properties, at least
@@ -89,13 +74,12 @@ class Mediator implements Observable
             $newsub = [
                 'callback' => $handler[0],
                 'force'    => (isset($handler[2])) ? $handler[2] : false,
-                'interval' => ($isInterval) ? $interval : null, // milliseconds
+                'interval' => ($isInterval) ? $interval : null,
                 'nextcalltime' => ($isInterval) ? self::currentTimeMillis() + $interval : null,
             ];
 
-            // ok, now we've composed our subscriber, so throw it on the queue
+            // ok, now throw it on the queue and increment the counter for this event name
             $this->subscribers[$eventName][$priority][] = $newsub;
-            // and increment the counter for this event name
             $this->subscribers[$eventName]['subscribers']++;
 
             // there will never be held timer events, but otherwise fire matching held events
@@ -110,8 +94,7 @@ class Mediator implements Observable
     /**
      * Let any relevant subscribers know an event needs to be handled
      *
-     * Note: The event object can be used to share information to other similar
-     * event handlers.
+     * Note: The event object can be used to share information to other similar event handlers.
      *
      * @api
      * @param   Event       $event  An event object, usually freshly created
@@ -312,6 +295,16 @@ class Mediator implements Observable
     }
 
     /**
+     *
+     */
+    protected function extractInterval($eventName)
+    {
+        return (strpos($eventName, 'timer:') === 0)
+            ? (int) substr($eventName, 6)
+            : false;
+    }
+
+    /**
      * If any events are held for $eventName, re-publish them now
      *
      * @internal
@@ -332,6 +325,24 @@ class Mediator implements Observable
             endif;
         endforeach;
         return $results;
+    }
+
+    /**
+     *
+     */
+    protected function scaffoldIfNotExist($eventName)
+    {
+        if (!$this->hasSubscribers($eventName)):
+            $this->subscribers[$eventName] = [
+                'subscribers'          => 0,
+                self::PRIORITY_URGENT  => [],
+                self::PRIORITY_HIGHEST => [],
+                self::PRIORITY_HIGH    => [],
+                self::PRIORITY_NORMAL  => [],
+                self::PRIORITY_LOW     => [],
+                self::PRIORITY_LOWEST  => [],
+            ];
+        endif;
     }
 
     /**
