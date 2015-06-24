@@ -54,10 +54,10 @@ class Mediator implements Observable
     {
         $results = [];
 
-        foreach ($eventHandlers as $eventName => $handler):
-            if (!self::isValidHandler($handler)):
+        foreach ($eventHandlers as $eventName => $handler) {
+            if (!self::isValidHandler($handler)) {
                 throw new \BadMethodCallException('Mediator::subscribe() - invalid handler passed for ' . $eventName);
-            endif;
+            }
 
             list($eventName, $interval) = $this->extractIntervalFrom($eventName); // milliseconds
             $this->scaffoldIfNotExist($eventName);
@@ -68,10 +68,10 @@ class Mediator implements Observable
             $this->subscribers[$eventName]['subscribers']++;
 
             // there will never be held timer events, but otherwise fire matching held events
-            if ($interval === 0):
+            if ($interval === 0) {
                 $results[] = $this->fireHeldEvents($eventName, $priority);
-            endif;
-        endforeach;
+            }
+        }
 
         return $results;
     }
@@ -83,74 +83,31 @@ class Mediator implements Observable
      *
      * @api
      * @param   Event       $event  An event object, usually freshly created
-     * @param   int|null    $priority   Notify only subscribers of a certain priority level
      * @return  mixed   Result of the event
      * @since   1.0
      * @version 1.0
      */
-    public function publish(Event $event, $priority = null)
+    public function publish(Event $event)
     {
         $event->mediator = $this;
-        $eventNames = [];
+        $found = false;
+        $result = null;
 
         // Make sure event is fired to any subscribers that listen to all events
         // all is greedy, any is not - due to order
-        foreach (['all', $event->name, 'any'] as $e):
-            if ($this->hasSubscribers($e)):
-                $eventNames[] = $e;
-            endif;
-        endforeach;
+        foreach (['all', $event->name, 'any'] as $eventName) {
+            if ($this->hasSubscribers($eventName)) {
+                $found = true;
+                $result = $this->fireMatchingSubs($eventName, $event, $result);
+            }
+        }
 
-        // If no subscribers are listening to this event, try holding it
-        if (empty($eventNames)):
-            $this->tryHolding($event);
-            return;
-        endif;
+        if ($found === true) {
+            return $result;
+        }
 
-        $result = null;
-
-        foreach ($eventNames as $eventName):
-
-            $sublevels = $this->subscribers[$eventName];
-            unset($sublevels['subscribers']);
-
-            if ($priority !== null):
-                // If a priority was passed, trim out all others
-                $sublevels = [$priority => $sublevels[$priority]];
-            endif;
-
-            // Loop through all the subscriber priority levels
-            foreach ($sublevels as $plevel => $subs):
-
-                // Loop through the subscribers of this priority level
-                foreach ($subs as $i => $subscriber):
-
-                    // If the event's cancelled and the subscriber isn't forced, skip it
-                    if ($event->cancelled && !$subscriber['force']):
-                        continue;
-                    endif;
-
-                    // If the subscriber is a timer...
-                    if ($subscriber['interval'] !== 0):
-                        // Then if the current time is before when the sub needs to be called
-                        if (self::currentTimeMillis() < $subscriber['nextcalltime']):
-                            // It's not time yet, so skip it
-                            continue;
-                        endif;
-
-                        // Mark down the next call time as another interval away
-                        $this->subscribers[$eventName][$plevel][$i]['nextcalltime']
-                            += $subscriber['interval'];
-                    endif;
-
-                    // Fire it and save the result for passing to any further subscribers
-                    $event->previousResult = $result;
-                    $result = call_user_func($subscriber['callback'], $event);
-                endforeach;
-            endforeach;
-        endforeach;
-
-        return $result;
+        // If no subscribers were listening to this event, try holding it
+        $this->tryHolding($event);
     }
 
     /**
@@ -165,62 +122,62 @@ class Mediator implements Observable
      */
     public function unsubscribe($eventName, $callback = null)
     {
-        if (is_array($eventName)):
-            foreach ($eventName as $event => $subscriber):
+        if (is_array($eventName)) {
+            foreach ($eventName as $event => $subscriber) {
                 // handle an array of subscribers recursively if that's what we're given
                 // or else we're unsubscribing all from $eventName's events
                 $this->unsubscribe($event, (is_array($subscriber)) ? $subscriber[0] : null);
-            endforeach;
+            }
             return $this;
-        endif;
+        }
 
-        if ($callback === null):
+        if ($callback === null) {
             // we're unsubscribing all of $eventName
             unset($this->subscribers[$eventName]);
             return $this;
-        endif;
+        }
 
-        if (is_object($callback) && $callback instanceof Observer):
+        if (is_object($callback) && $callback instanceof Observer) {
             // assume we're unsubscribing a parsed method name
             $callback = [$callback, 'on' . str_replace(':', '', ucfirst($eventName))];
-        endif;
+        }
 
-        if (!is_callable($callback)):
+        if (!is_callable($callback)) {
             // callback is invalid, so halt
             throw new \InvalidArgumentException('Cannot unsubscribe a non-callable');
-        endif;
+        }
 
         // if this is a timer subscriber
-        if (strpos($eventName, 'timer:') === 0):
+        if (strpos($eventName, 'timer:') === 0) {
             // then we'll need to match not only the callback but also the interval
             $callback = [
                 'interval' => (int) substr($eventName, 6),
                 'callback' => $callback
             ];
             $eventName = 'timer';
-        endif;
+        }
 
         // If the event has not been subscribed to by this callback then return
-        if (($priority = $this->isSubscribed($eventName, $callback)) === false):
+        if (($priority = $this->isSubscribed($eventName, $callback)) === false) {
             return $this;
-        endif;
+        }
 
         // Loop through the subscribers for the matching priority level
-        foreach ($this->subscribers[$eventName][$priority] as $key => $subscriber):
+        foreach ($this->subscribers[$eventName][$priority] as $key => $subscriber) {
 
             // if this subscriber matches what we're looking for
-            if (self::arraySearchDeep($callback, $subscriber) !== false):
+            if (self::arraySearchDeep($callback, $subscriber) !== false) {
 
                 // delete that subscriber and decrement the event name's counter
                 unset($this->subscribers[$eventName][$priority][$key]);
                 $this->subscribers[$eventName]['subscribers']--;
-            endif;
-        endforeach;
+            }
+        }
 
         // If there are no more events, remove the event
-        if (!$this->hasSubscribers($eventName)):
+        if (!$this->hasSubscribers($eventName)) {
             unset($this->subscribers[$eventName]);
-        endif;
+        }
 
         return $this;
     }
@@ -251,14 +208,14 @@ class Mediator implements Observable
      */
     public function holdUnheardEvents($val = null)
     {
-        if ($val === null):
+        if ($val === null) {
             return $this->holdingUnheardEvents;
-        endif;
+        }
 
         $val = (bool) $val;
-        if ($val === false):
+        if ($val === false) {
             $this->held = []; // make sure the held list is wiped clean
-        endif;
+        }
         return ($this->holdingUnheardEvents = $val);
     }
 
@@ -304,14 +261,55 @@ class Mediator implements Observable
     {
         $results = [];
         // loop through any held events
-        foreach ($this->held as $i => $e):
+        foreach ($this->held as $i => $e) {
             // if this held event's name matches our new subscriber
-            if ($e->getName() == $eventName):
+            if ($e->getName() == $eventName) {
                 // re-publish that matching held event
                 $results[] = $this->publish(array_splice($this->held, $i, 1)[0], $priority);
-            endif;
-        endforeach;
+            }
+        }
         return $results;
+    }
+
+    /**
+     *
+     */
+    protected function fireMatchingSubs($eventName, Event $event, $result = null)
+    {
+        $sublevels = $this->subscribers[$eventName];
+        unset($sublevels['subscribers']);
+
+        // Loop through all the subscriber priority levels
+        foreach ($sublevels as $plevel => $subs) {
+
+            // Loop through the subscribers of this priority level
+            foreach ($subs as $i => $subscriber) {
+
+                // If the event's cancelled and the subscriber isn't forced, skip it
+                if ($event->cancelled && $subscriber['force'] === false) {
+                    continue;
+                }
+
+                // If the subscriber is a timer...
+                if ($subscriber['interval'] !== 0) {
+                    // Then if the current time is before when the sub needs to be called
+                    if (self::currentTimeMillis() < $subscriber['nextcalltime']) {
+                        // It's not time yet, so skip it
+                        continue;
+                    }
+
+                    // Mark down the next call time as another interval away
+                    $this->subscribers[$eventName][$plevel][$i]['nextcalltime']
+                        += $subscriber['interval'];
+                }
+
+                // Fire it and save the result for passing to any further subscribers
+                $event->previousResult = $result;
+                $result = call_user_func($subscriber['callback'], $event);
+            }
+        }
+
+        return $result;
     }
 
     /**
@@ -319,7 +317,7 @@ class Mediator implements Observable
      */
     protected function scaffoldIfNotExist($eventName)
     {
-        if (!$this->hasSubscribers($eventName)):
+        if (!$this->hasSubscribers($eventName)) {
             $this->subscribers[$eventName] = [
                 'subscribers'          => 0,
                 self::PRIORITY_URGENT  => [],
@@ -329,7 +327,7 @@ class Mediator implements Observable
                 self::PRIORITY_LOW     => [],
                 self::PRIORITY_LOWEST  => [],
             ];
-        endif;
+        }
     }
 
     /**
@@ -342,9 +340,9 @@ class Mediator implements Observable
      */
     protected function tryHolding(Event $event)
     {
-        if ($this->holdingUnheardEvents && $event->name != 'timer'):
+        if ($this->holdingUnheardEvents && $event->name != 'timer') {
             array_unshift($this->held, $event);
-        endif;
+        }
     }
 
     /**
@@ -363,19 +361,19 @@ class Mediator implements Observable
             && !is_callable($needle)
             // and if all key/value pairs in $needle have exact matches in $haystack
             && count(array_diff_assoc($needle, $haystack)) == 0
-        ):
+        ) {
             // we found what we're looking for, so bubble back up with 'true'
             return true;
-        endif;
+        }
 
-        foreach ($haystack as $key => $value):
+        foreach ($haystack as $key => $value) {
             if ($needle === $value
                 || (is_array($value) && self::arraySearchDeep($needle, $value) !== false)
-            ):
+            ) {
                 // return top-level key of $haystack that contains $needle as a value somewhere
                 return $key;
-            endif;
-        endforeach;
+            }
+        }
         // 404 $needle not found
         return false;
     }

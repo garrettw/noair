@@ -94,16 +94,16 @@ class Event
      */
     public function __get($name)
     {
-        if ($name == 'previousResult'):
+        if ($name == 'previousResult') {
             return end($this->previousResults);
-        endif;
+        }
 
         return $this->$name;
     }
 
     public function __set($name, $val)
     {
-        switch ($name):
+        switch ($name) {
             case 'previousResult':
                 $this->previousResults[] = $val;
                 break;
@@ -120,6 +120,6 @@ class Event
 
             default:
                 $this->$name = $val;
-        endswitch;
+        }
     }
 }

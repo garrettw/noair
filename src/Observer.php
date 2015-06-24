@@ -73,12 +73,12 @@ abstract class Observer
      */
     public function subscribe($newhandler = null)
     {
-        if (is_array($newhandler)):
+        if (is_array($newhandler)) {
             $this->handlers = array_merge($this->handlers, $newhandler);
             $this->subResults = $this->mediator->subscribe($newhandler);
             $this->subscribed = true;
             return $this;
-        endif;
+        }
 
         // get an array of the methods in the child class
         $methods = (new \ReflectionClass($this))->getMethods(\ReflectionMethod::IS_PUBLIC);
@@ -88,25 +88,25 @@ abstract class Observer
         );
         $autohandlers = [];
 
-        foreach ($methods as $method):
+        foreach ($methods as $method) {
             //extract the event name from the method name
             $eventName = lcfirst(substr($method->name, 2));
 
             // if this is a timer handler, insert a colon before the interval
-            if (strpos($eventName, 'timer') === 0):
+            if (strpos($eventName, 'timer') === 0) {
                 $eventName = substr_replace($eventName, ':', 5, 0);
-            endif;
+            }
 
             // add it to our list
             $autohandlers[$eventName] = [[$this, $method->name]];
-        endforeach;
+        }
 
         $this->handlers = array_merge($autohandlers, $this->handlers);
 
-        if (empty($this->handlers)):
+        if (empty($this->handlers)) {
             throw new \RuntimeException(
                 '$this->handlers[] is empty or $this has no on*() methods!');
-        endif;
+        }
 
         $this->subResults = $this->mediator->subscribe($this->handlers);
         $this->subscribed = true;
@@ -124,9 +124,9 @@ abstract class Observer
      */
     public function unsubscribe()
     {
-        if (empty($this->handlers)):
+        if (empty($this->handlers)) {
             return $this;
-        endif;
+        }
 
         $this->mediator->unsubscribe($this->handlers);
 
