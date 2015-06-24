@@ -14,7 +14,7 @@ abstract class Observer
 {
     /**
      * @api
-     * @var     Mediator   The Mediator instance our handlers are registered with
+     * @var     Observable  The mediator instance our handlers are registered with
      * @since   1.0
      */
     protected $mediator;

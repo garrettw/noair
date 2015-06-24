@@ -69,7 +69,7 @@ class Mediator implements Observable
 
             // there will never be held timer events, but otherwise fire matching held events
             if ($interval === 0) {
-                $results[] = $this->fireHeldEvents($eventName, $priority);
+                $results[] = $this->fireHeldEvents($eventName);
             }
         }
 
@@ -253,11 +253,10 @@ class Mediator implements Observable
      *
      * @internal
      * @param   string  $eventName  The event name to check for
-     * @param   integer $priority   The priority to assign to published events
      * @since   1.0
      * @version 1.0
      */
-    protected function fireHeldEvents($eventName, $priority)
+    protected function fireHeldEvents($eventName)
     {
         $results = [];
         // loop through any held events
@@ -265,7 +264,7 @@ class Mediator implements Observable
             // if this held event's name matches our new subscriber
             if ($e->getName() == $eventName) {
                 // re-publish that matching held event
-                $results[] = $this->publish(array_splice($this->held, $i, 1)[0], $priority);
+                $results[] = $this->publish(array_splice($this->held, $i, 1)[0]);
             }
         }
         return $results;
