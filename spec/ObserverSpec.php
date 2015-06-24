@@ -33,13 +33,13 @@ class ObserverSpec extends ObjectBehavior
 
 class ObserverExample extends \Noair\Observer
 {
-    public function subscribe() {
+    public function subscribe($newhandler = null) {
         // This is just here for an example of explicitly-defined handlers
         $this->handlers = [
             'all' => [[$this, 'log'], \Noair\Mediator::PRIORITY_URGENT, true],
             'one' => [[$this, 'handlerOne']],
         ];
-        parent::subscribe();
+        parent::subscribe($newhandler);
     }
 
     public function handlerOne(\Noair\Event $e)

@@ -22,13 +22,12 @@ interface Observable
      * event handlers.
      *
      * @api
-     * @param   Event       $event  An event object, usually freshly created
-     * @param   int|null    $priority   Notify only subscribers of a certain priority level
+     * @param   Event   $event  An event object, usually freshly created
      * @return  mixed   Result of the event
      * @since   1.0
      * @version 1.0
      */
-    public function publish(Event $event, $priority);
+    public function publish(Event $event);
 
     /**
      * Detach a given handler (or all) from an event name
