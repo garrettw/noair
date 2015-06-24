@@ -1,6 +1,6 @@
 {
 	"name": "garrettw/noair",
-	"description": "PHP event library following Mediator pattern using Observer implementation",
+	"description": "PHP event library following the Mediator behavioral pattern implemented like an Observer",
 	"keywords": ["event","listener","hook","mediator","publish-subscribe","observer"],
 	"type": "library",
 	"homepage": "https://github.com/garrettw/noair",

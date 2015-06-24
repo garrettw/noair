@@ -39,5 +39,5 @@ interface Observable
      * @since   1.0
      * @version 1.0
      */
-    public function unsubscribe($eventName, $callback);
+    public function unsubscribe($eventName, $callback = null);
 }
