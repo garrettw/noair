@@ -42,8 +42,7 @@ interface Observable
      *
      * @api
      *
-     * @param string|array         $eventName The event(s) we want to unsubscribe from
-     * @param callable|object|null $callback  The callback we want to remove from the event
+     * @param array $eventHandlers Associative array of event names & handlers
      *
      * @return self This object
      *
@@ -51,5 +50,5 @@ interface Observable
      *
      * @version 1.0
      */
-    public function unsubscribe($eventName, $callback = null);
+    public function unsubscribe(array $eventHandlers);
 }

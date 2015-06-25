@@ -67,7 +67,7 @@ class Mediator implements Observable
 
         foreach ($eventHandlers as $eventName => $handler) {
             if (!self::isValidHandler($handler)) {
-                throw new \BadMethodCallException('Mediator::subscribe() - invalid handler passed for '.$eventName);
+                throw new \BadMethodCallException('Mediator::subscribe() - invalid handler passed for ' . $eventName);
             }
 
             list($eventName, $interval) = $this->extractIntervalFrom($eventName); // milliseconds
@@ -147,7 +147,7 @@ class Mediator implements Observable
                 continue;
             }
 
-            $callback = $this->formatCallback($callback);
+            $callback = $this->formatCallback($eventName, $callback);
 
             // if this is a timer subscriber
             if (strpos($eventName, 'timer:') === 0) {
@@ -277,6 +277,7 @@ class Mediator implements Observable
 
     /**
      *
+     * @param string $eventName
      */
     protected function fireMatchingSubs($eventName, Event $event, $result = null)
     {
@@ -319,11 +320,11 @@ class Mediator implements Observable
     /**
      *
      */
-    protected function formatCallback($callback)
+    protected function formatCallback($eventName, $callback)
     {
         if (is_object($callback) && $callback instanceof Observer) {
             // assume we're unsubscribing a parsed method name
-            $callback = [$callback, 'on'.str_replace(':', '', ucfirst($eventName))];
+            $callback = [$callback, 'on' . str_replace(':', '', ucfirst($eventName))];
         }
 
         if (!is_callable($callback)) {
@@ -354,6 +355,7 @@ class Mediator implements Observable
 
     /**
      *
+     * @param callable $callback
      */
     protected function searchAndDestroy($eventName, $priority, $callback)
     {

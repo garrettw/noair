@@ -9,8 +9,8 @@ include SRCDIR . '/Mediator.php';
 include SRCDIR . '/Event.php';
 include SRCDIR . '/ObserverInterface.php';
 include SRCDIR . '/Observer.php';
-use Noair\Mediator,
-    Noair\Event;
+use Noair\Event;
+use Noair\Mediator;
 
 // Setup Noair
 $hub = new Mediator();
@@ -50,7 +50,7 @@ echo "With better formatting\n",
 
 // Usually this should be handled by custom public methods in the observers,
 // because this code wouldn't be aware of the exact subscription
-$hub->unsubscribe('formatGroup', $betterFormatter);
+$hub->unsubscribe(['formatGroup' => $betterFormatter]);
 
 $fancify->unsubscribe();
 
