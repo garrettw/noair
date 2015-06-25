@@ -3,51 +3,62 @@
 namespace Noair;
 
 /**
- * Main event pipeline
+ * Main event pipeline.
  *
  * @author  Garrett Whitehorn
  * @author  David Tkachuk
- * @package Noair
+ *
  * @version 1.0
  */
 class Mediator implements Observable
 {
-    const PRIORITY_URGENT	= 0;
-    const PRIORITY_HIGHEST	= 1;
-    const PRIORITY_HIGH		= 2;
-    const PRIORITY_NORMAL	= 3;
-    const PRIORITY_LOW		= 4;
-    const PRIORITY_LOWEST	= 5;
+    const PRIORITY_URGENT = 0;
+    const PRIORITY_HIGHEST = 1;
+    const PRIORITY_HIGH = 2;
+    const PRIORITY_NORMAL = 3;
+    const PRIORITY_LOW = 4;
+    const PRIORITY_LOWEST = 5;
 
     /**
      * @api
-     * @var     array   Holds any published events to which no handler has yet subscribed
+     *
+     * @var array Holds any published events to which no handler has yet subscribed
+     *
      * @since   1.0
      */
     public $held = [];
 
     /**
      * @internal
-     * @var     bool    Whether we should put published events for which there are no subscribers onto the $held list.
+     *
+     * @var bool Whether we should put published events for which there are no subscribers onto the list.
+     *
      * @since   1.0
      */
     protected $holdingUnheardEvents = false;
 
     /**
      * @internal
-     * @var     array   Contains registered events and their handlers by priority
+     *
+     * @var array Contains registered events and their handlers by priority
+     *
      * @since   1.0
      */
     protected $subscribers = [];
 
     /**
-     * Registers event handler(s) to event name(s)
+     * Registers event handler(s) to event name(s).
      *
      * @api
-     * @throws  BadMethodCallException  if validation of any handler fails
-     * @param   array   $eventHandlers  Associative array of event names & handlers
-     * @return  array   The results of firing any held events
+     *
+     * @throws BadMethodCallException if validation of any handler fails
+     *
+     * @param array $eventHandlers Associative array of event names & handlers
+     *
+     * @return array The results of firing any held events
+     *
      * @since   1.0
+     *
      * @version 1.0
      */
     public function subscribe(array $eventHandlers)
@@ -77,14 +88,18 @@ class Mediator implements Observable
     }
 
     /**
-     * Let any relevant subscribers know an event needs to be handled
+     * Let any relevant subscribers know an event needs to be handled.
      *
      * Note: The event object can be used to share information to other similar event handlers.
      *
      * @api
-     * @param   Event       $event  An event object, usually freshly created
-     * @return  mixed   Result of the event
+     *
+     * @param Event $event An event object, usually freshly created
+     *
+     * @return mixed Result of the event
+     *
      * @since   1.0
+     *
      * @version 1.0
      */
     public function publish(Event $event)
@@ -111,13 +126,17 @@ class Mediator implements Observable
     }
 
     /**
-     * Detach a given handler (or all) from an event name
+     * Detach a given handler (or all) from an event name.
      *
      * @api
-     * @param   string|array    $eventName  The event(s) we want to unsubscribe from
-     * @param   callable|object|null    $callback   The callback we want to remove from the event
-     * @return  self    This object
+     *
+     * @param string|array         $eventName The event(s) we want to unsubscribe from
+     * @param callable|object|null $callback  The callback we want to remove from the event
+     *
+     * @return self This object
+     *
      * @since   1.0
+     *
      * @version 1.0
      */
     public function unsubscribe($eventName, $callback = null)
@@ -128,12 +147,14 @@ class Mediator implements Observable
                 // or else we're unsubscribing all from $eventName's events
                 $this->unsubscribe($event, (is_array($subscriber)) ? $subscriber[0] : null);
             }
+
             return $this;
         }
 
         if ($callback === null) {
             // we're unsubscribing all of $eventName
             unset($this->subscribers[$eventName]);
+
             return $this;
         }
 
@@ -152,7 +173,7 @@ class Mediator implements Observable
             // then we'll need to match not only the callback but also the interval
             $callback = [
                 'interval' => (int) substr($eventName, 6),
-                'callback' => $callback
+                'callback' => $callback,
             ];
             $eventName = 'timer';
         }
@@ -183,12 +204,16 @@ class Mediator implements Observable
     }
 
     /**
-     * Determine if the event name has any subscribers
+     * Determine if the event name has any subscribers.
      *
      * @api
-     * @param   string  $eventName  The desired event's name
-     * @return  bool    Whether or not the event was published
+     *
+     * @param string $eventName The desired event's name
+     *
+     * @return bool Whether or not the event was published
+     *
      * @since   1.0
+     *
      * @version 1.0
      */
     public function hasSubscribers($eventName)
@@ -198,12 +223,16 @@ class Mediator implements Observable
     }
 
     /**
-     * Get or set the value of the holdingUnheardEvents property
+     * Get or set the value of the holdingUnheardEvents property.
      *
      * @api
-     * @param   bool|null   $val    true or false to set the value, omit to retrieve
-     * @return  bool    the value of the property
+     *
+     * @param bool|null $val true or false to set the value, omit to retrieve
+     *
+     * @return bool the value of the property
+     *
      * @since   1.0
+     *
      * @version 1.0
      */
     public function holdUnheardEvents($val = null)
@@ -216,17 +245,22 @@ class Mediator implements Observable
         if ($val === false) {
             $this->held = []; // make sure the held list is wiped clean
         }
+
         return ($this->holdingUnheardEvents = $val);
     }
 
     /**
-     * Determine if the described event has been subscribed to or not by the callback
+     * Determine if the described event has been subscribed to or not by the callback.
      *
      * @api
-     * @param   string      $eventName  The desired event's name
-     * @param   callable    $callback   The specific callback we're looking for
-     * @return  int|false   Priority it's subscribed to if found, false otherwise; use ===
+     *
+     * @param string   $eventName The desired event's name
+     * @param callable $callback  The specific callback we're looking for
+     *
+     * @return int|false Priority it's subscribed to if found, false otherwise; use ===
+     *
      * @since   1.0
+     *
      * @version 1.0
      */
     public function isSubscribed($eventName, callable $callback)
@@ -249,11 +283,14 @@ class Mediator implements Observable
     }
 
     /**
-     * If any events are held for $eventName, re-publish them now
+     * If any events are held for $eventName, re-publish them now.
      *
      * @internal
-     * @param   string  $eventName  The event name to check for
+     *
+     * @param string $eventName The event name to check for
+     *
      * @since   1.0
+     *
      * @version 1.0
      */
     protected function fireHeldEvents($eventName)
@@ -267,6 +304,7 @@ class Mediator implements Observable
                 $results[] = $this->publish(array_splice($this->held, $i, 1)[0]);
             }
         }
+
         return $results;
     }
 
@@ -318,23 +356,26 @@ class Mediator implements Observable
     {
         if (!$this->hasSubscribers($eventName)) {
             $this->subscribers[$eventName] = [
-                'subscribers'          => 0,
-                self::PRIORITY_URGENT  => [],
+                'subscribers' => 0,
+                self::PRIORITY_URGENT => [],
                 self::PRIORITY_HIGHEST => [],
-                self::PRIORITY_HIGH    => [],
-                self::PRIORITY_NORMAL  => [],
-                self::PRIORITY_LOW     => [],
-                self::PRIORITY_LOWEST  => [],
+                self::PRIORITY_HIGH => [],
+                self::PRIORITY_NORMAL => [],
+                self::PRIORITY_LOW => [],
+                self::PRIORITY_LOWEST => [],
             ];
         }
     }
 
     /**
-     * Puts an event on the held list if enabled and not a timer
+     * Puts an event on the held list if enabled and not a timer.
      *
      * @internal
-     * @param   Event   $event   The event object to be held
+     *
+     * @param Event $event The event object to be held
+     *
      * @since   1.0
+     *
      * @version 1.0
      */
     protected function tryHolding(Event $event)
@@ -348,10 +389,14 @@ class Mediator implements Observable
      * Searches a multi-dimensional array for a value in any dimension.
      *
      * @internal
-     * @param   mixed   $needle     The value to be searched for
-     * @param   array   $haystack   The array
-     * @return  int|bool    The top-level key containing the needle if found, false otherwise
+     *
+     * @param mixed $needle   The value to be searched for
+     * @param array $haystack The array
+     *
+     * @return int|bool The top-level key containing the needle if found, false otherwise
+     *
      * @since   1.0
+     *
      * @version 1.0
      */
     protected static function arraySearchDeep($needle, array $haystack)
@@ -384,7 +429,7 @@ class Mediator implements Observable
     {
         return [
             'callback' => $handler[0],
-            'force'    => (isset($handler[2])) ? $handler[2] : false,
+            'force' => (isset($handler[2])) ? $handler[2] : false,
             'interval' => $interval,
             'nextcalltime' => self::currentTimeMillis() + $interval,
         ];
@@ -406,8 +451,11 @@ class Mediator implements Observable
      * Named for the similar function in Java.
      *
      * @internal
-     * @return  int Current timestamp in milliseconds
+     *
+     * @return int Current timestamp in milliseconds
+     *
      * @since   1.0
+     *
      * @version 1.0
      */
     final protected static function currentTimeMillis()

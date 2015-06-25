@@ -3,18 +3,20 @@
 namespace Noair;
 
 /**
- * Noair observer class -- to be extended
+ * Noair observer class -- to be extended.
  *
  * @author  Garrett Whitehorn
  * @author  David Tkachuk
- * @package Noair
+ *
  * @version 1.0
  */
 abstract class Observer
 {
     /**
      * @api
-     * @var     Observable  The mediator instance our handlers are registered with
+     *
+     * @var Observable The mediator instance our handlers are registered with
+     *
      * @since   1.0
      */
     protected $mediator;
@@ -26,7 +28,9 @@ abstract class Observer
      * Terminology note: they're not subscribers until they're subscribed ;)
      *
      * @api
-     * @var     array   The event handlers we'll be subscribing
+     *
+     * @var array The event handlers we'll be subscribing
+     *
      * @since   1.0
      */
     protected $handlers = [];
@@ -36,14 +40,18 @@ abstract class Observer
      * store the results of that event.
      *
      * @api
-     * @var     array Results of firing pending events
+     *
+     * @var array Results of firing pending events
+     *
      * @since   1.0
      */
     protected $subResults = [];
 
     /**
      * @api
-     * @var     bool    Reflects whether we have subscribed to a Mediator instance
+     *
+     * @var bool Reflects whether we have subscribed to a Mediator instance
+     *
      * @since   1.0
      */
     protected $subscribed = false;
@@ -54,7 +62,7 @@ abstract class Observer
     }
 
     /**
-     * @return  mixed
+     * @return mixed
      */
     public function __get($name)
     {
@@ -62,13 +70,18 @@ abstract class Observer
     }
 
     /**
-     * Registers our handlers with our Mediator instance
+     * Registers our handlers with our Mediator instance.
      *
      * @api
-     * @throws  \RuntimeException   if there are no handlers to subscribe
-     * @param   array|null  $newhandler Individual handler to subscribe if needed
-     * @return  self    This observer object
+     *
+     * @throws \RuntimeException if there are no handlers to subscribe
+     *
+     * @param array|null $newhandler Individual handler to subscribe if needed
+     *
+     * @return self This observer object
+     *
      * @since   1.0
+     *
      * @version 1.0
      */
     public function subscribe($newhandler = null)
@@ -77,6 +90,7 @@ abstract class Observer
             $this->handlers = array_merge($this->handlers, $newhandler);
             $this->subResults = $this->mediator->subscribe($newhandler);
             $this->subscribed = true;
+
             return $this;
         }
 
@@ -115,11 +129,14 @@ abstract class Observer
     }
 
     /**
-     * Unregisters our handlers
+     * Unregisters our handlers.
      *
      * @api
-     * @return  self    This observer object
+     *
+     * @return self This observer object
+     *
      * @since   1.0
+     *
      * @version 1.0
      */
     public function unsubscribe()
