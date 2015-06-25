@@ -78,7 +78,7 @@ class MediatorSpec extends ObjectBehavior
         $this->subscribe([$eventname => [$callback]]);
         $this->subscribe([$eventname => [$callback]]);
 
-        $this->unsubscribe($eventname);
+        $this->unsubscribe([$eventname => '*']);
 
         $this->shouldNotHaveSubscribers($eventname);
     }
@@ -91,7 +91,7 @@ class MediatorSpec extends ObjectBehavior
         $this->subscribe([$eventname => [$callback1]]);
         $this->subscribe([$eventname => [$callback2]]);
 
-        $this->unsubscribe($eventname, $callback1);
+        $this->unsubscribe([$eventname => $callback1]);
 
         $this->isSubscribed($eventname, $callback2)->shouldBeInteger();
         $this->isSubscribed($eventname, $callback1)->shouldReturn(false);
