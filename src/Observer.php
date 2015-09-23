@@ -99,27 +99,29 @@ abstract class Observer
         // filter out any that don't begin with "on"
         $methods = array_filter($methods,
             function (\ReflectionMethod $m) { return (strpos($m->name, 'on') === 0); }
-        );
-        $autohandlers = [];
+        ); // slow, both array_filter and closure
 
-        foreach ($methods as $method) {
-            //extract the event name from the method name
-            $eventName = lcfirst(substr($method->name, 2));
+        if (count($methods) === 0) {
+            if (empty($this->handlers)) {
+                throw new \RuntimeException('$this->handlers[] is empty or $this has no on*() methods!');
+            }
+        } else {
+            $autohandlers = [];
 
-            // if this is a timer handler, insert a colon before the interval
-            if (strpos($eventName, 'timer') === 0) {
-                $eventName = substr_replace($eventName, ':', 5, 0);
+            foreach ($methods as $method) { // slow
+                //extract the event name from the method name
+                $eventName = lcfirst(substr($method->name, 2));
+
+                // if this is a timer handler, insert a colon before the interval
+                if (strpos($eventName, 'timer') === 0) {
+                    $eventName = substr_replace($eventName, ':', 5, 0);
+                }
+
+                // add it to our list
+                $autohandlers[$eventName] = [[$this, $method->name]];
             }
 
-            // add it to our list
-            $autohandlers[$eventName] = [[$this, $method->name]];
-        }
-
-        $this->handlers = array_merge($autohandlers, $this->handlers);
-
-        if (empty($this->handlers)) {
-            throw new \RuntimeException(
-                '$this->handlers[] is empty or $this has no on*() methods!');
+            $this->handlers = array_merge($autohandlers, $this->handlers);
         }
 
         $this->subResults = $this->mediator->subscribe($this->handlers);

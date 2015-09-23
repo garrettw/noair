@@ -70,11 +70,16 @@ class Mediator implements Observable
                 throw new \BadMethodCallException('Mediator::subscribe() - invalid handler passed for ' . $eventName);
             }
 
-            list($eventName, $interval) = $this->extractIntervalFrom($eventName); // milliseconds
-            $this->scaffoldIfNotExist($eventName);
+            // extract interval (in milliseconds) from $eventName
+            $interval = 0;
+            if (strpos($eventName, 'timer:') === 0) {
+                $interval = (int) substr($eventName, 6);
+                $eventName = 'timer';
+            }
 
             $priority = (isset($handler[1])) ? $handler[1] : self::PRIORITY_NORMAL;
 
+            $this->scaffoldIfNotExist($eventName);
             $this->subscribers[$eventName][$priority][] = self::subscriberFromHandler($handler, $interval);
             $this->subscribers[$eventName]['subscribers']++;
 
@@ -105,19 +110,17 @@ class Mediator implements Observable
     public function publish(Event $event)
     {
         $event->mediator = $this;
-        $found = false;
         $result = null;
 
         // Make sure event is fired to any subscribers that listen to all events
         // all is greedy, any is not - due to order
         foreach (['all', $event->name, 'any'] as $eventName) {
             if ($this->hasSubscribers($eventName)) {
-                $found = true;
                 $result = $this->fireMatchingSubs($eventName, $event, $result);
             }
         }
 
-        if ($found === true) {
+        if ($result !== null) {
             return $result;
         }
 
@@ -145,6 +148,11 @@ class Mediator implements Observable
                 // we're unsubscribing all of $eventName
                 unset($this->subscribers[$eventName]);
                 continue;
+            }
+
+            if (is_array($callback) && !is_callable($callback)) {
+                // we've probably been given an Observer's handler array
+                $callback = $callback[0];
             }
 
             $callback = $this->formatCallback($eventName, $callback);
@@ -235,18 +243,6 @@ class Mediator implements Observable
         return ($this->hasSubscribers($eventName))
             ? self::arraySearchDeep($callback, $this->subscribers[$eventName])
             : false;
-    }
-
-    /**
-     *
-     */
-    protected function extractIntervalFrom($eventName)
-    {
-        $interval = (strpos($eventName, 'timer:') === 0)
-            ? (int) substr($eventName, 6)
-            : 0;
-
-        return [($interval !== 0) ? 'timer' : $eventName, $interval];
     }
 
     /**

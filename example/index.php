@@ -7,7 +7,6 @@ define('SRCDIR', dirname(BASEDIR) . '/src');
 include SRCDIR . '/Observable.php';
 include SRCDIR . '/Mediator.php';
 include SRCDIR . '/Event.php';
-include SRCDIR . '/ObserverInterface.php';
 include SRCDIR . '/Observer.php';
 use Noair\Event;
 use Noair\Mediator;
