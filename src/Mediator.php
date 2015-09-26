@@ -77,11 +77,7 @@ class Mediator implements Observable
                 $eventName = 'timer';
             }
 
-            $priority = (isset($handler[1])) ? $handler[1] : self::PRIORITY_NORMAL;
-
-            $this->scaffoldIfNotExist($eventName);
-            $this->subscribers[$eventName][$priority][] = self::subscriberFromHandler($handler, $interval);
-            $this->subscribers[$eventName]['subscribers']++;
+            $this->addNewSub($eventName, $interval, $handler);
 
             // there will never be held timer events, but otherwise fire matching held events
             if ($interval === 0) {
@@ -150,11 +146,6 @@ class Mediator implements Observable
                 continue;
             }
 
-            if (is_array($callback) && !is_callable($callback)) {
-                // we've probably been given an Observer's handler array
-                $callback = $callback[0];
-            }
-
             $callback = $this->formatCallback($eventName, $callback);
 
             // if this is a timer subscriber
@@ -167,12 +158,7 @@ class Mediator implements Observable
                 $eventName = 'timer';
             }
 
-            // If the event has not been subscribed to by this callback then return
-            if (($priority = $this->isSubscribed($eventName, $callback)) === false) {
-                continue;
-            }
-
-            $this->searchAndDestroy($eventName, $priority, $callback);
+            $this->searchAndDestroy($eventName, $callback);
         }
 
         return $this;
@@ -194,7 +180,7 @@ class Mediator implements Observable
     public function hasSubscribers($eventName)
     {
         return (isset($this->subscribers[$eventName])
-                && $this->subscribers[$eventName]['subscribers'] > 0);
+                && count($this->subscribers[$eventName]) > 1);
     }
 
     /**
@@ -232,7 +218,7 @@ class Mediator implements Observable
      * @param string   $eventName The desired event's name
      * @param callable $callback  The specific callback we're looking for
      *
-     * @return int|false Priority it's subscribed to if found, false otherwise; use ===
+     * @return int|false Subscriber's array index if found, false otherwise; use ===
      *
      * @since   1.0
      *
@@ -273,41 +259,79 @@ class Mediator implements Observable
 
     /**
      *
+     */
+    protected function addNewSub($eventName, $interval, $handler)
+    {
+        // scaffold if not exist
+        if (!$this->hasSubscribers($eventName)) {
+            $this->subscribers[$eventName] = [
+                [ // insert positions
+                    self::PRIORITY_URGENT => 1,
+                    self::PRIORITY_HIGHEST => 1,
+                    self::PRIORITY_HIGH => 1,
+                    self::PRIORITY_NORMAL => 1,
+                    self::PRIORITY_LOW => 1,
+                    self::PRIORITY_LOWEST => 1,
+                ]
+            ];
+        }
+
+        switch (count($handler)) {
+            case 1:
+                $handler[] = self::PRIORITY_NORMAL;
+            case 2:
+                $handler[] = false;
+        }
+
+        $sub = [
+            'callback' => $handler[0],
+            'priority' => $priority = $handler[1],
+            'force' => $handler[2],
+            'interval' => $interval,
+            'nextcalltime' => self::currentTimeMillis() + $interval,
+        ];
+
+        $insertpos = $this->subscribers[$eventName][0][$priority];
+        array_splice($this->subscribers[$eventName], $insertpos, 0, [$sub]);
+
+        for ($prio = $priority; $prio <= self::PRIORITY_LOWEST; $prio++) {
+            $this->subscribers[$eventName][0][$prio]++;
+        }
+    }
+
+    /**
+     *
      * @param string $eventName
      */
     protected function fireMatchingSubs($eventName, Event $event, $result = null)
     {
-        $sublevels = $this->subscribers[$eventName];
-        unset($sublevels['subscribers']);
+        $subs = $this->subscribers[$eventName];
+        unset($subs[0]);
 
-        // Loop through all the subscriber priority levels
-        foreach ($sublevels as $plevel => $subs) {
+        // Loop through the subscribers of this event
+        foreach ($subs as $i => $subscriber) {
 
-            // Loop through the subscribers of this priority level
-            foreach ($subs as $i => $subscriber) {
+            // If the event's cancelled and the subscriber isn't forced, skip it
+            if ($event->cancelled && $subscriber['force'] === false) {
+                continue;
+            }
 
-                // If the event's cancelled and the subscriber isn't forced, skip it
-                if ($event->cancelled && $subscriber['force'] === false) {
+            // If the subscriber is a timer...
+            if ($subscriber['interval'] !== 0) {
+                // Then if the current time is before when the sub needs to be called
+                if (self::currentTimeMillis() < $subscriber['nextcalltime']) {
+                    // It's not time yet, so skip it
                     continue;
                 }
 
-                // If the subscriber is a timer...
-                if ($subscriber['interval'] !== 0) {
-                    // Then if the current time is before when the sub needs to be called
-                    if (self::currentTimeMillis() < $subscriber['nextcalltime']) {
-                        // It's not time yet, so skip it
-                        continue;
-                    }
-
-                    // Mark down the next call time as another interval away
-                    $this->subscribers[$eventName][$plevel][$i]['nextcalltime']
-                        += $subscriber['interval'];
-                }
-
-                // Fire it and save the result for passing to any further subscribers
-                $event->previousResult = $result;
-                $result = call_user_func($subscriber['callback'], $event);
+                // Mark down the next call time as another interval away
+                $this->subscribers[$eventName][$i]['nextcalltime']
+                    += $subscriber['interval'];
             }
+
+            // Fire it and save the result for passing to any further subscribers
+            $event->previousResult = $result;
+            $result = call_user_func($subscriber['callback'], $event);
         }
 
         return $result;
@@ -323,6 +347,11 @@ class Mediator implements Observable
             $callback = [$callback, 'on' . str_replace(':', '', ucfirst($eventName))];
         }
 
+        if (is_array($callback) && !is_callable($callback)) {
+            // we've probably been given an Observer's handler array
+            $callback = $callback[0];
+        }
+
         if (!is_callable($callback)) {
             // callback is invalid, so halt
             throw new \InvalidArgumentException('Cannot unsubscribe a non-callable');
@@ -333,37 +362,24 @@ class Mediator implements Observable
 
     /**
      *
-     */
-    protected function scaffoldIfNotExist($eventName)
-    {
-        if (!$this->hasSubscribers($eventName)) {
-            $this->subscribers[$eventName] = [
-                'subscribers' => 0,
-                self::PRIORITY_URGENT => [],
-                self::PRIORITY_HIGHEST => [],
-                self::PRIORITY_HIGH => [],
-                self::PRIORITY_NORMAL => [],
-                self::PRIORITY_LOW => [],
-                self::PRIORITY_LOWEST => [],
-            ];
-        }
-    }
-
-    /**
-     *
      * @param callable $callback
      */
-    protected function searchAndDestroy($eventName, $priority, $callback)
+    protected function searchAndDestroy($eventName, $callback)
     {
-        // Loop through the subscribers for the matching priority level
-        foreach ($this->subscribers[$eventName][$priority] as $key => $subscriber) {
+        // Loop through the subscribers for the matching event
+        foreach ($this->subscribers[$eventName] as $key => $subscriber) {
 
-            // if this subscriber matches what we're looking for
-            if (self::arraySearchDeep($callback, $subscriber) !== false) {
+            // if this subscriber doesn't match what we're looking for, keep looking
+            if (self::arraySearchDeep($callback, $subscriber) === false) {
+                continue;
+            }
 
-                // delete that subscriber and decrement the event name's counter
-                unset($this->subscribers[$eventName][$priority][$key]);
-                $this->subscribers[$eventName]['subscribers']--;
+            // otherwise, cut it out and get its priority
+            $priority = array_splice($this->subscribers[$eventName], $key, 1)[0]['priority'];
+
+            // shift the insertion points up for equal and lower priorities
+            for ($prio = $priority; $prio <= self::PRIORITY_LOWEST; $prio++) {
+                $this->subscribers[$eventName][0][$prio]--;
             }
         }
 
@@ -426,19 +442,6 @@ class Mediator implements Observable
         }
         // 404 $needle not found
         return false;
-    }
-
-    /**
-     *
-     */
-    protected static function subscriberFromHandler($handler, $interval = 0)
-    {
-        return [
-            'callback' => $handler[0],
-            'force' => (isset($handler[2])) ? $handler[2] : false,
-            'interval' => $interval,
-            'nextcalltime' => self::currentTimeMillis() + $interval,
-        ];
     }
 
     /**

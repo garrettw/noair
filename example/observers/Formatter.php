@@ -41,7 +41,8 @@ class Formatter extends Noair\Observer
     }
 
     public function formatDate(Event $event) {
-        return date('F j, Y h:i:s A', $event->data);
+        // return date('F j, Y h:i:s A', $event->data);
+        return '';
     }
 
     public function onCreatePost(Event $event) {
