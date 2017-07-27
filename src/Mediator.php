@@ -258,9 +258,19 @@ class Mediator implements Observable
     }
 
     /**
+     * Handles inserting the new subscriber into the sorted internal array.
      *
+     * @internal
+     *
+     * @param string $eventName The event it will listen for
+     * @param int    $interval  The timer interval, if it's a timer (0 if not)
+     * @param array  $handler   Each individual handler coming from the Observer
+     *
+     * @since   1.0
+     *
+     * @version 1.0
      */
-    protected function addNewSub($eventName, $interval, $handler)
+    protected function addNewSub($eventName, $interval, array $handler)
     {
         // scaffold if not exist
         if (!$this->hasSubscribers($eventName)) {
@@ -279,6 +289,7 @@ class Mediator implements Observable
         switch (count($handler)) {
             case 1:
                 $handler[] = self::PRIORITY_NORMAL;
+                // fall through
             case 2:
                 $handler[] = false;
         }
@@ -294,14 +305,21 @@ class Mediator implements Observable
         $insertpos = $this->subscribers[$eventName][0][$priority];
         array_splice($this->subscribers[$eventName], $insertpos, 0, [$sub]);
 
-        for ($prio = $priority; $prio <= self::PRIORITY_LOWEST; $prio++) {
-            $this->subscribers[$eventName][0][$prio]++;
-        }
+        $this->realignPriorities($eventName, $priority);
     }
 
     /**
+     * Takes care of actually calling the event handling functions
+     *
+     * @internal
      *
      * @param string $eventName
+     * @param Event  $event
+     * @param mixed  $result
+     *
+     * @since   1.0
+     *
+     * @version 1.0
      */
     protected function fireMatchingSubs($eventName, Event $event, $result = null)
     {
@@ -362,6 +380,16 @@ class Mediator implements Observable
 
     /**
      *
+     */
+    protected function realignPriorities($eventName, $priority, $inc = 1)
+    {
+        for ($prio = $priority; $prio <= self::PRIORITY_LOWEST; $prio++) {
+            $this->subscribers[$eventName][0][$prio] += $inc;
+        }
+    }
+
+    /**
+     *
      * @param callable $callback
      */
     protected function searchAndDestroy($eventName, $callback)
@@ -378,9 +406,7 @@ class Mediator implements Observable
             $priority = array_splice($this->subscribers[$eventName], $key, 1)[0]['priority'];
 
             // shift the insertion points up for equal and lower priorities
-            for ($prio = $priority; $prio <= self::PRIORITY_LOWEST; $prio++) {
-                $this->subscribers[$eventName][0][$prio]--;
-            }
+            $this->realignPriorities($eventName, $priority, -1);
         }
 
         // If there are no more events, remove the event
