@@ -5,14 +5,14 @@ define('SRCDIR', dirname(BASEDIR) . '/src');
 
 // Include Noair classes
 include SRCDIR . '/Observable.php';
+include SRCDIR . '/Manager.php';
 include SRCDIR . '/Mediator.php';
 include SRCDIR . '/Event.php';
 include SRCDIR . '/Observer.php';
 use Noair\Event;
-use Noair\Mediator;
 
 // Setup Noair
-$hub = new Mediator();
+$hub = new \Noair\Mediator(new \Noair\Manager);
 
 // Include the observers
 include BASEDIR . '/observers/Formatter.php';

@@ -7,6 +7,10 @@ use Prophecy\Argument;
 
 class MediatorSpec extends ObjectBehavior
 {
+    function let() {
+        $this->beConstructedWith(new \Noair\Manager);
+    }
+
     function it_is_initializable()
     {
         $this->shouldBeAnInstanceOf('Noair\Mediator');

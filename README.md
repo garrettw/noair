@@ -57,7 +57,7 @@ class MyObserver extends \Noair\Observer
 ```
 - Now, in the main code you're executing, you'll need to create a hub for your events: a Mediator object which serves as a go-between for your handlers and your code that fires/publishes the events.
 ```php
-$hub = new \Noair\Mediator();
+$hub = new \Noair\Mediator(new \Noair\Manager);
 ```
 - Then, you can create objects of your own Observer classes and subscribe them to the hub.
 ```php

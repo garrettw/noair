@@ -193,6 +193,43 @@ class Mediator implements Observable
     }
 
     /**
+     * Determine if the event name has any subscribers.
+     *
+     * @api
+     *
+     * @param string $eventName The desired event's name
+     *
+     * @return bool Whether or not the event was published
+     *
+     * @since   1.0
+     *
+     * @version 1.0
+     */
+    public function hasSubscribers($eventName)
+    {
+        return $this->mgr->hasSubscribers($eventName);
+    }
+
+    /**
+     * Determine if the described event has been subscribed to or not by the callback.
+     *
+     * @api
+     *
+     * @param string   $eventName The desired event's name
+     * @param callable $callback  The specific callback we're looking for
+     *
+     * @return int|false Subscriber's array index if found, false otherwise; use ===
+     *
+     * @since   1.0
+     *
+     * @version 1.0
+     */
+    public function isSubscribed($eventName, callable $callback)
+    {
+        return $this->mgr->isSubscribed($eventName, $callback);
+    }
+
+    /**
      * If any events are held for $eventName, re-publish them now.
      *
      * @internal
