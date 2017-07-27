@@ -143,7 +143,7 @@ class Mediator implements Observable
         foreach ($eventHandlers as $eventName => $callback) {
             if ($callback == '*') {
                 // we're unsubscribing all of $eventName
-                $this->mgr->remove([$eventName]);
+                $this->mgr->remove($eventName);
                 continue;
             }
 
