@@ -97,8 +97,11 @@ abstract class Observer
         // get an array of the methods in the child class
         $methods = (new \ReflectionClass($this))->getMethods(\ReflectionMethod::IS_PUBLIC);
         // filter out any that don't begin with "on"
-        $methods = array_filter($methods,
-            function (\ReflectionMethod $m) { return (strpos($m->name, 'on') === 0); }
+        $methods = array_filter(
+            $methods,
+            function (\ReflectionMethod $m) {
+                return (strpos($m->name, 'on') === 0);
+            }
         ); // slow, both array_filter and closure
 
         if (count($methods) === 0) {
