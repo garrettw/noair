@@ -99,7 +99,7 @@ class Manager
         switch (count($handler)) {
             case 1:
                 $handler[] = self::PRIORITY_NORMAL;
-                // fall through
+                // no break
             case 2:
                 $handler[] = false;
         }
